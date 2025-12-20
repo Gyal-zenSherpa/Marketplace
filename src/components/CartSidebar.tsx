@@ -1,4 +1,5 @@
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 
@@ -12,6 +13,12 @@ export function CartSidebar() {
     totalPrice,
     clearCart,
   } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    navigate("/checkout");
+  };
 
   if (!isCartOpen) return null;
 
@@ -123,7 +130,7 @@ export function CartSidebar() {
                   ${totalPrice.toFixed(2)}
                 </span>
               </div>
-              <Button variant="hero" className="mb-3 w-full" size="lg">
+              <Button variant="hero" className="mb-3 w-full" size="lg" onClick={handleCheckout}>
                 Checkout
               </Button>
               <Button

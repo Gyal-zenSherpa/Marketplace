@@ -7,6 +7,7 @@ import { ProductRecommendations } from "@/components/ProductRecommendations";
 import { ChatAssistant } from "@/components/ChatAssistant";
 
 const Index = () => {
+  console.log('Index page rendering');
   return (
     <div className="min-h-screen bg-background">
       <Header />

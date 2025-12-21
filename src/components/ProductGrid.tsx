@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
 
 export function ProductGrid() {
+  console.log('ProductGrid rendering');
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>(staticProducts);

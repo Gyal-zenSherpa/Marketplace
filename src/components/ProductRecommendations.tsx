@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "./ProductCard";
@@ -19,6 +19,20 @@ interface DBProduct {
   description: string | null;
 }
 
+const mapToProduct = (p: DBProduct): Product => ({
+  id: p.id,
+  name: p.name,
+  brand: p.brand,
+  price: p.price,
+  originalPrice: p.original_price || undefined,
+  image: p.image || "https://via.placeholder.com/300",
+  category: p.category,
+  rating: p.rating || 0,
+  reviews: p.reviews || 0,
+  inStock: p.in_stock ?? true,
+  description: p.description || "",
+});
+
 interface ProductRecommendationsProps {
   userPreferences?: string;
   currentProductId?: string;
@@ -31,25 +45,7 @@ export function ProductRecommendations({
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const mapToProduct = (p: DBProduct): Product => ({
-    id: p.id,
-    name: p.name,
-    brand: p.brand,
-    price: p.price,
-    originalPrice: p.original_price || undefined,
-    image: p.image || "https://via.placeholder.com/300",
-    category: p.category,
-    rating: p.rating || 0,
-    reviews: p.reviews || 0,
-    inStock: p.in_stock ?? true,
-    description: p.description || "",
-  });
-
-  useEffect(() => {
-    fetchRecommendations();
-  }, [userPreferences, currentProductId]);
-
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("product-recommendations", {
@@ -80,7 +76,11 @@ export function ProductRecommendations({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userPreferences, currentProductId]);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
   if (isLoading) {
     return (

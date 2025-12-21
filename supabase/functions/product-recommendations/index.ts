@@ -13,12 +13,12 @@ serve(async (req) => {
 
   try {
     const { userPreferences, currentProductId, limit = 4 } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
@@ -44,27 +44,26 @@ serve(async (req) => {
 
     console.log('Generating recommendations based on:', userPreferences);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
+        contents: [
           {
-            role: 'system',
-            content: `You are a product recommendation AI. Based on user preferences, select the most relevant products. Return ONLY a JSON array of product IDs in order of relevance. Example: ["id1", "id2", "id3"]`
-          },
-          {
-            role: 'user',
-            content: `User preferences: ${userPreferences || 'general shopping'}
+            parts: [
+              {
+                text: `You are a product recommendation AI. Based on user preferences, select the most relevant products. Return ONLY a JSON array of product IDs in order of relevance. Example: ["id1", "id2", "id3"]
+
+User preferences: ${userPreferences || 'general shopping'}
 
 Available products:
 ${products.map(p => `ID: ${p.id}, Name: ${p.name}, Brand: ${p.brand}, Category: ${p.category}, Price: $${p.price}`).join('\n')}
 
 Select the top ${limit} most relevant products for this user. Return only the JSON array of IDs.`
+              }
+            ]
           }
         ],
       }),
@@ -80,7 +79,7 @@ Select the top ${limit} most relevant products for this user. Return only the JS
     }
 
     const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || '[]';
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     console.log('AI response:', aiResponse);
 

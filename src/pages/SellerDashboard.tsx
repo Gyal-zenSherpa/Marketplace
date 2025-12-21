@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Product } from "@/types/product";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
@@ -41,7 +42,7 @@ const initialForm: ProductForm = {
 export default function SellerDashboard() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductForm>(initialForm);
@@ -58,9 +59,9 @@ export default function SellerDashboard() {
     if (user) {
       fetchProducts();
     }
-  }, [user]);
+  }, [user, fetchProducts]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -70,7 +71,7 @@ export default function SellerDashboard() {
     if (!error && data) {
       setProducts(data);
     }
-  };
+  }, [user?.id]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -158,7 +159,7 @@ export default function SellerDashboard() {
       setFormData(initialForm);
       setEditingId(null);
       fetchProducts();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -169,7 +170,7 @@ export default function SellerDashboard() {
     }
   };
 
-  const handleEdit = (product: any) => {
+  const handleEdit = (product: Product) => {
     setFormData({
       name: product.name,
       brand: product.brand,

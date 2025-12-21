@@ -12,12 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
+# Supabase
+supabase.tar.gz
+supabase.zip
+supabase/.temp/
 *.ntvs*
 *.njsproj
 *.sln

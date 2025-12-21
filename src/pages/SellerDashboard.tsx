@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Package, ArrowLeft } from "lucide-react";
+import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ export default function SellerDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductForm>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -78,6 +79,45 @@ export default function SellerDashboard() {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const generateAIDescription = async () => {
+    if (!formData.name || !formData.brand) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please enter product name and brand first.",
+      });
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-description", {
+        body: {
+          productName: formData.name,
+          brand: formData.brand,
+          category: formData.category,
+          price: formData.price || "0",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.description) {
+        setFormData((prev) => ({ ...prev, description: data.description }));
+        toast({ title: "Description generated!" });
+      }
+    } catch (error: unknown) {
+      console.error("AI generation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to generate description",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -284,13 +324,31 @@ export default function SellerDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={generateAIDescription}
+                      disabled={isGeneratingAI}
+                      className="gap-1 text-xs"
+                    >
+                      {isGeneratingAI ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                      Generate with AI
+                    </Button>
+                  </div>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={3}
+                    placeholder="Enter description or use AI to generate one..."
                   />
                 </div>
 

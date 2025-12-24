@@ -24,12 +24,18 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Fetch available products
-    const { data: products, error } = await supabase
+    let query = supabase
       .from('products')
       .select('id, name, brand, category, price, description, image, rating')
       .eq('in_stock', true)
-      .neq('id', currentProductId || '')
       .limit(20);
+
+    // Only filter by currentProductId if it's a valid UUID
+    if (currentProductId && currentProductId.length > 0) {
+      query = query.neq('id', currentProductId);
+    }
+
+    const { data: products, error } = await query;
 
     if (error) {
       console.error('Error fetching products:', error);

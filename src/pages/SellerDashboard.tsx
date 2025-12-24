@@ -55,12 +55,6 @@ export default function SellerDashboard() {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      fetchProducts();
-    }
-  }, [user, fetchProducts]);
-
   const fetchProducts = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
@@ -69,9 +63,28 @@ export default function SellerDashboard() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setProducts(data);
+      const mappedProducts: Product[] = data.map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        price: p.price,
+        originalPrice: p.original_price ?? undefined,
+        description: p.description || "",
+        image: p.image || "",
+        category: p.category,
+        inStock: p.in_stock ?? true,
+        rating: p.rating ?? 0,
+        reviews: p.reviews ?? 0,
+      }));
+      setProducts(mappedProducts);
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProducts();
+    }
+  }, [user, fetchProducts]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -163,7 +176,7 @@ export default function SellerDashboard() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "An error occurred",
       });
     } finally {
       setIsSubmitting(false);
@@ -175,11 +188,11 @@ export default function SellerDashboard() {
       name: product.name,
       brand: product.brand,
       price: product.price.toString(),
-      original_price: product.original_price?.toString() || "",
+      original_price: product.originalPrice?.toString() || "",
       description: product.description || "",
       image: product.image || "",
       category: product.category,
-      in_stock: product.in_stock,
+      in_stock: product.inStock,
     });
     setEditingId(product.id);
     setIsDialogOpen(true);
@@ -417,12 +430,12 @@ export default function SellerDashboard() {
                     </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
-                        product.in_stock
+                        product.inStock
                           ? "bg-primary/10 text-primary"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {product.in_stock ? "In Stock" : "Out of Stock"}
+                      {product.inStock ? "In Stock" : "Out of Stock"}
                     </span>
                   </div>
                 </div>

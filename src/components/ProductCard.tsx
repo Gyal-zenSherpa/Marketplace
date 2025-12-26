@@ -20,6 +20,7 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
 
   return (
     <div
+      ref={ref}
       className="group relative flex flex-col overflow-hidden rounded-xl bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 animate-fade-in"
       style={{ animationDelay: `${index * 100}ms` }}
     >

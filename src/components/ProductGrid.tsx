@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 import { CategoryFilter } from "./CategoryFilter";
 import { SearchBar } from "./SearchBar";
+import { ProductFilters, FilterState } from "./ProductFilters";
 import { products as staticProducts, categories } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
@@ -12,6 +13,24 @@ export function ProductGrid() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>(staticProducts);
+  
+  const maxPrice = useMemo(() => {
+    return Math.max(...allProducts.map((p) => p.price), 1000);
+  }, [allProducts]);
+
+  const [filters, setFilters] = useState<FilterState>({
+    priceRange: [0, 10000],
+    inStockOnly: false,
+    sortBy: "featured",
+  });
+
+  // Update price range when products load
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      priceRange: [0, maxPrice],
+    }));
+  }, [maxPrice]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -41,19 +60,49 @@ export function ProductGrid() {
     fetchProducts();
   }, []);
 
-  const filteredProducts = allProducts.filter((product) => {
-    const matchesCategory =
-      activeCategory === "All" || product.category === activeCategory;
+  const filteredProducts = useMemo(() => {
+    let result = allProducts.filter((product) => {
+      const matchesCategory =
+        activeCategory === "All" || product.category === activeCategory;
 
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      searchQuery === "" ||
-      product.name.toLowerCase().includes(searchLower) ||
-      product.brand.toLowerCase().includes(searchLower) ||
-      product.description.toLowerCase().includes(searchLower);
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        product.name.toLowerCase().includes(searchLower) ||
+        product.brand.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower);
 
-    return matchesCategory && matchesSearch;
-  });
+      const matchesPrice =
+        product.price >= filters.priceRange[0] &&
+        product.price <= filters.priceRange[1];
+
+      const matchesStock = !filters.inStockOnly || product.inStock;
+
+      return matchesCategory && matchesSearch && matchesPrice && matchesStock;
+    });
+
+    // Apply sorting
+    switch (filters.sortBy) {
+      case "price-low":
+        result = [...result].sort((a, b) => a.price - b.price);
+        break;
+      case "price-high":
+        result = [...result].sort((a, b) => b.price - a.price);
+        break;
+      case "rating":
+        result = [...result].sort((a, b) => b.rating - a.rating);
+        break;
+      case "newest":
+        // Already sorted by newest from DB, static products at the end
+        break;
+      case "featured":
+      default:
+        // Keep original order
+        break;
+    }
+
+    return result;
+  }, [allProducts, activeCategory, searchQuery, filters]);
 
   return (
     <section className="py-12 md:py-16">
@@ -75,6 +124,16 @@ export function ProductGrid() {
           onCategoryChange={setActiveCategory}
         />
 
+        <ProductFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          maxPrice={maxPrice}
+        />
+
+        <div className="mb-4 text-sm text-muted-foreground">
+          Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+        </div>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product, index) => (
             <Link key={product.id} to={`/product/${product.id}`}>
@@ -86,7 +145,7 @@ export function ProductGrid() {
         {filteredProducts.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-lg text-muted-foreground">
-              No products found matching your search
+              No products found matching your criteria
             </p>
           </div>
         )}

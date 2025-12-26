@@ -1,17 +1,18 @@
+import { forwardRef, useState } from "react";
 import { Star, ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
-import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
   index: number;
 }
 
-export function ProductCard({ product, index }: ProductCardProps) {
-  const { addToCart } = useCart();
-  const [isLiked, setIsLiked] = useState(false);
+export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
+  ({ product, index }, ref) => {
+    const { addToCart } = useCart();
+    const [isLiked, setIsLiked] = useState(false);
   
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -112,4 +113,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
       </div>
     </div>
   );
-}
+});
+
+ProductCard.displayName = "ProductCard";

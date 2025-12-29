@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,13 +41,16 @@ const initialForm: ProductForm = {
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductForm>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -93,6 +96,68 @@ export default function SellerDashboard() {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please upload an image file (JPG, PNG, etc.)",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      setFormData((prev) => ({ ...prev, image: publicUrl }));
+      setImagePreview(publicUrl);
+      toast({ title: "Image uploaded successfully!" });
+    } catch (error: unknown) {
+      console.error("Upload error:", error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const clearImage = () => {
+    setFormData((prev) => ({ ...prev, image: "" }));
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const generateAIDescription = async () => {
@@ -194,6 +259,7 @@ export default function SellerDashboard() {
       category: product.category,
       in_stock: product.inStock,
     });
+    setImagePreview(product.image || null);
     setEditingId(product.id);
     setIsDialogOpen(true);
   };
@@ -211,6 +277,7 @@ export default function SellerDashboard() {
 
   const openNewDialog = () => {
     setFormData(initialForm);
+    setImagePreview(null);
     setEditingId(null);
     setIsDialogOpen(true);
   };
@@ -327,14 +394,60 @@ export default function SellerDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="image">Image URL</Label>
-                  <Input
-                    id="image"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleInputChange}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <Label>Product Image</Label>
+                  <div className="flex flex-col gap-3">
+                    {(imagePreview || formData.image) && (
+                      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-secondary">
+                        <img
+                          src={imagePreview || formData.image}
+                          alt="Product preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearImage}
+                          className="absolute top-2 right-2 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingImage}
+                        className="flex-1"
+                      >
+                        {isUploadingImage ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        {isUploadingImage ? "Uploading..." : "Upload Image"}
+                      </Button>
+                    </div>
+                    <div className="text-center text-xs text-muted-foreground">or</div>
+                    <Input
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        setImagePreview(e.target.value);
+                      }}
+                      placeholder="Paste image URL here"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

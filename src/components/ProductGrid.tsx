@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
 
 export function ProductGrid() {
-  console.log('ProductGrid rendering');
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>(staticProducts);
@@ -105,7 +104,7 @@ export function ProductGrid() {
   }, [allProducts, activeCategory, searchQuery, filters]);
 
   return (
-    <section className="py-12 md:py-16">
+    <section id="products-section" className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="mb-8 text-center">
           <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">

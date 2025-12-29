@@ -1,8 +1,15 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export function Hero() {
-  console.log('Hero component rendering');
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-section");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="relative overflow-hidden py-16 md:py-24">
       <div className="absolute inset-0 gradient-hero opacity-5" />
@@ -29,12 +36,14 @@ export function Hero() {
           </p>
           
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button variant="hero" size="xl">
+            <Button variant="hero" size="xl" onClick={scrollToProducts}>
               Start Shopping
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="xl">
-              Become a Seller
+            <Button variant="outline" size="xl" asChild>
+              <Link to="/seller">
+                Become a Seller
+              </Link>
             </Button>
           </div>
           

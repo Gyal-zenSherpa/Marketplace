@@ -18,10 +18,13 @@ export function Hero() {
       
       <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+          <button 
+            onClick={scrollToProducts}
+            className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+          >
             <Sparkles className="h-4 w-4" />
             Discover Amazing Deals
-          </div>
+          </button>
           
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
             Your Local{" "}

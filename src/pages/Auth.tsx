@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Shield, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Shield, AlertTriangle, Wand2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useSuspiciousActivityDetection } from "@/hooks/useSecurityAudit";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Strong password validation for signup
 const signupSchema = z.object({
@@ -34,13 +35,20 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required").max(100),
 });
 
+// Magic link validation
+const magicLinkSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+});
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [authMethod, setAuthMethod] = useState<"password" | "magic-link">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockUntil, setLockUntil] = useState<Date | null>(null);
   const [passwordStrength, setPasswordStrength] = useState<{
@@ -115,6 +123,47 @@ export default function Auth() {
       checkPasswordStrength(password);
     }
   }, [password, isLogin, checkPasswordStrength]);
+
+  // Handle magic link submission
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const validated = magicLinkSchema.parse({ email });
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        email: validated.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        setMagicLinkSent(true);
+        toast({
+          title: "Check your email",
+          description: "We've sent you a magic link to sign in.",
+        });
+      }
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        toast({
+          variant: "destructive",
+          title: "Validation error",
+          description: err.errors[0].message,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,137 +303,215 @@ export default function Auth() {
               <Shield className="h-7 w-7 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
-              {isLogin ? "Welcome back" : "Create account"}
+              {magicLinkSent ? "Check your email" : isLogin ? "Welcome back" : "Create account"}
             </h1>
             <p className="text-muted-foreground mt-2">
-              {isLogin
-                ? "Sign in to your marketplace account"
-                : "Join our marketplace community"}
+              {magicLinkSent 
+                ? "Click the link in your email to sign in"
+                : isLogin
+                  ? "Sign in to your marketplace account"
+                  : "Join our marketplace community"}
             </p>
           </div>
 
-          {isLocked && lockUntil && new Date() < lockUntil && (
-            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-destructive">Account temporarily locked</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Too many failed login attempts. Try again in {Math.ceil((lockUntil.getTime() - Date.now()) / 60000)} minutes.
+          {magicLinkSent ? (
+            <div className="text-center space-y-4">
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <Mail className="h-12 w-12 mx-auto text-primary mb-3" />
+                <p className="text-sm text-foreground">
+                  We've sent a magic link to <strong>{email}</strong>
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  The link will expire in 1 hour
                 </p>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMagicLinkSent(false);
+                  setEmail("");
+                }}
+                className="w-full"
+              >
+                Try a different email
+              </Button>
             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                    autoComplete="name"
-                    maxLength={100}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                  autoComplete="email"
-                  maxLength={255}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10"
-                  required
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                  maxLength={100}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              
-              {/* Password strength indicator for signup */}
-              {!isLogin && password && (
-                <div className="space-y-2">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <div
-                        key={level}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          level <= passwordStrength.score
-                            ? getStrengthColor(passwordStrength.score)
-                            : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  {passwordStrength.feedback.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Missing: {passwordStrength.feedback.slice(0, 2).join(", ")}
+          ) : (
+            <>
+              {isLocked && lockUntil && new Date() < lockUntil && (
+                <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-destructive">Account temporarily locked</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Too many failed login attempts. Try again in {Math.ceil((lockUntil.getTime() - Date.now()) / 60000)} minutes.
                     </p>
-                  )}
+                  </div>
                 </div>
               )}
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full gradient-hero text-primary-foreground"
-              disabled={isLoading || (isLocked && lockUntil && new Date() < lockUntil)}
-            >
-              {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-            </Button>
-          </form>
+              {isLogin && (
+                <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "password" | "magic-link")} className="mb-6">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="password" className="flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Password
+                    </TabsTrigger>
+                    <TabsTrigger value="magic-link" className="flex items-center gap-2">
+                      <Wand2 className="h-4 w-4" />
+                      Magic Link
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setPassword("");
-                setPasswordStrength({ score: 0, feedback: [] });
-              }}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
-            </button>
-          </div>
+              {authMethod === "magic-link" && isLogin ? (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="magic-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="magic-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                        autoComplete="email"
+                        maxLength={255}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full gradient-hero text-primary-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending..." : "Send Magic Link"}
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    We'll email you a secure link to sign in instantly
+                  </p>
+                </form>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {!isLogin && (
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="fullName"
+                          type="text"
+                          placeholder="John Doe"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="pl-10"
+                          autoComplete="name"
+                          maxLength={100}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                        autoComplete="email"
+                        maxLength={255}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 pr-10"
+                        required
+                        autoComplete={isLogin ? "current-password" : "new-password"}
+                        maxLength={100}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    
+                    {/* Password strength indicator for signup */}
+                    {!isLogin && password && (
+                      <div className="space-y-2">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <div
+                              key={level}
+                              className={`h-1 flex-1 rounded-full transition-colors ${
+                                level <= passwordStrength.score
+                                  ? getStrengthColor(passwordStrength.score)
+                                  : "bg-muted"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        {passwordStrength.feedback.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Missing: {passwordStrength.feedback.slice(0, 2).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full gradient-hero text-primary-foreground"
+                    disabled={isLoading || (isLocked && lockUntil && new Date() < lockUntil)}
+                  >
+                    {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+                  </Button>
+                </form>
+              )}
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setPassword("");
+                    setPasswordStrength({ score: 0, feedback: [] });
+                    setAuthMethod("password");
+                  }}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {isLogin
+                    ? "Don't have an account? Sign up"
+                    : "Already have an account? Sign in"}
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Security notice */}
           <div className="mt-6 pt-6 border-t border-border">

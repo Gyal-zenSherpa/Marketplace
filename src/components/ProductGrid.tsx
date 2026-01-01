@@ -31,6 +31,25 @@ export function ProductGrid() {
     }));
   }, [maxPrice]);
 
+  // Listen for navigation filter events
+  useEffect(() => {
+    const handleNavFilter = (event: CustomEvent<{ section: string }>) => {
+      if (event.detail.section === 'deals') {
+        // Filter to show discounted items
+        setFilters((prev) => ({ ...prev, sortBy: 'price-low' }));
+      } else if (event.detail.section === 'categories') {
+        // Scroll to category filter area
+        const categorySection = document.querySelector('.category-filter');
+        if (categorySection) {
+          categorySection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    };
+
+    window.addEventListener('nav-filter', handleNavFilter as EventListener);
+    return () => window.removeEventListener('nav-filter', handleNavFilter as EventListener);
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       const { data } = await supabase
@@ -117,11 +136,13 @@ export function ProductGrid() {
 
         <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <CategoryFilter
-          categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+        <div className="category-filter">
+          <CategoryFilter
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        </div>
 
         <ProductFilters
           filters={filters}

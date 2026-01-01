@@ -34,8 +34,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Key,
 } from "lucide-react";
 import { format } from "date-fns";
+import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -370,14 +372,18 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              User Management
+              Users
             </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Audit Logs
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Key className="h-4 w-4" />
+              Security
             </TabsTrigger>
           </TabsList>
 
@@ -558,6 +564,44 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security">
+            <div className="space-y-6">
+              <TwoFactorSetup userId={user?.id || ""} />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Recommendations</CardTitle>
+                  <CardDescription>Best practices for admin account security</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <span>Use a strong, unique password for your admin account</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <span>Enable two-factor authentication (2FA) for additional security</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <span>Regularly review the audit logs for suspicious activity</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <span>Store backup codes securely in a password manager</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span>Never share your admin credentials or 2FA codes with anyone</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

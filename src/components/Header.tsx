@@ -40,6 +40,30 @@ export function Header() {
     navigate("/");
   };
 
+  const scrollToProducts = (section?: 'categories' | 'deals') => {
+    // Navigate to home if not already there
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation then scroll
+      setTimeout(() => {
+        const productsSection = document.getElementById("products-section");
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const productsSection = document.getElementById("products-section");
+      if (productsSection) {
+        productsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    
+    // Dispatch custom event to trigger filter changes
+    if (section) {
+      window.dispatchEvent(new CustomEvent('nav-filter', { detail: { section } }));
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -58,15 +82,24 @@ export function Header() {
         </div>
 
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <button 
+            onClick={() => scrollToProducts()}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Browse
-          </Link>
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          </button>
+          <button 
+            onClick={() => scrollToProducts('categories')}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Categories
-          </Link>
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          </button>
+          <button 
+            onClick={() => scrollToProducts('deals')}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             Deals
-          </Link>
+          </button>
           <Link to="/seller" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Sell
           </Link>

@@ -42,7 +42,6 @@ type AppRole = "admin" | "moderator" | "seller" | "user";
 interface UserWithRole {
   id: string;
   user_id: string;
-  email: string | null;
   full_name: string | null;
   role: AppRole;
   created_at: string;
@@ -144,10 +143,10 @@ export default function Admin() {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      // Get all profiles
+      // Get all profiles (email is now in auth.users, not profiles)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, user_id, email, full_name, created_at");
+        .select("id, user_id, full_name, created_at");
 
       if (profilesError) throw profilesError;
 
@@ -162,7 +161,10 @@ export default function Admin() {
       const usersWithRoles: UserWithRole[] = (profiles || []).map((profile) => {
         const userRole = roles?.find((r) => r.user_id === profile.user_id);
         return {
-          ...profile,
+          id: profile.id,
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          created_at: profile.created_at,
           role: (userRole?.role as AppRole) || "user",
         };
       });
@@ -274,9 +276,9 @@ export default function Admin() {
   const filteredUsers = users.filter((u) => {
     const search = userSearch.toLowerCase();
     return (
-      u.email?.toLowerCase().includes(search) ||
       u.full_name?.toLowerCase().includes(search) ||
-      u.role.toLowerCase().includes(search)
+      u.role.toLowerCase().includes(search) ||
+      u.user_id.toLowerCase().includes(search)
     );
   });
 
@@ -415,7 +417,7 @@ export default function Admin() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
+                        <TableHead>User ID</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead>Joined</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -434,7 +436,9 @@ export default function Admin() {
                             <TableCell className="font-medium">
                               {u.full_name || "—"}
                             </TableCell>
-                            <TableCell>{u.email || "—"}</TableCell>
+                            <TableCell className="text-xs font-mono text-muted-foreground">
+                              {u.user_id.slice(0, 8)}...
+                            </TableCell>
                             <TableCell>
                               <Badge className={ROLE_COLORS[u.role]} variant="outline">
                                 {u.role}

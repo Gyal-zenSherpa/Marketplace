@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface Profile {
   id: string;
   user_id: string;
-  email: string | null;
   full_name: string | null;
   avatar_url: string | null;
   is_seller: boolean;

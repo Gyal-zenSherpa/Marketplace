@@ -24,29 +24,24 @@ serve(async (req) => {
       throw new Error('Supabase configuration is missing');
     }
 
-    // Verify authentication
+    // Authentication is optional - recommendations work for everyone
+    // but can be personalized for logged-in users
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let userId: string | null = null;
+    
+    if (authHeader && authHeader !== `Bearer ${SUPABASE_ANON_KEY}`) {
+      try {
+        const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: { headers: { Authorization: authHeader } }
+        });
+        const { data: { user } } = await authClient.auth.getUser();
+        userId = user?.id || null;
+      } catch {
+        // Continue without user context
+      }
     }
 
-    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      console.error('Auth error:', authError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('Authenticated user:', user.id);
+    console.log('User context:', userId ? `authenticated: ${userId}` : 'anonymous');
 
     const { userPreferences, currentProductId, limit = 4 } = await req.json();
 

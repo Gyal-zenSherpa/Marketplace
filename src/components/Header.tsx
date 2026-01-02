@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Menu, User, LogOut, Store, Shield } from "lucide-react";
+import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlistContext } from "@/context/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export function Header() {
   const { totalItems, setIsCartOpen } = useCart();
   const { user, profile, signOut } = useAuth();
+  const { wishlistIds } = useWishlistContext();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -112,6 +114,22 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Wishlist button */}
+          <Button
+            variant="secondary"
+            size="icon"
+            className="relative"
+            onClick={() => navigate("/wishlist")}
+          >
+            <Heart className="h-5 w-5" />
+            {wishlistIds.size > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
+                {wishlistIds.size}
+              </span>
+            )}
+          </Button>
+
+          {/* Cart button */}
           <Button
             variant="secondary"
             size="icon"
@@ -143,6 +161,10 @@ export function Header() {
                   </p>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/wishlist")}>
+                  <Heart className="h-4 w-4 mr-2" />
+                  My Wishlist
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/seller")}>
                   <Store className="h-4 w-4 mr-2" />
                   Seller Dashboard

@@ -236,6 +236,7 @@ export default function Auth() {
           toast({
             title: "Welcome back!",
             description: "You have successfully logged in.",
+            duration: 2000,
           });
           navigate("/");
         }
@@ -261,6 +262,7 @@ export default function Auth() {
           toast({
             title: "Account created!",
             description: "You have successfully signed up.",
+            duration: 2000,
           });
           navigate("/");
         }

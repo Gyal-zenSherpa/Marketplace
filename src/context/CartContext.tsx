@@ -27,6 +27,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         toast({
           title: "Updated cart",
           description: `${product.name} quantity increased`,
+          duration: 2000,
         });
         return prev.map((item) =>
           item.id === product.id
@@ -37,6 +38,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Added to cart",
         description: `${product.name} has been added to your cart`,
+        duration: 2000,
       });
       return [...prev, { ...product, quantity: 1 }];
     });

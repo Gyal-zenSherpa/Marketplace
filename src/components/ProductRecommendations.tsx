@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Product } from "@/types/product";
+import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
+import { useAuth } from "@/context/AuthContext";
 
 interface DBProduct {
   id: string;
@@ -34,20 +36,30 @@ const mapToProduct = (p: DBProduct): Product => ({
 });
 
 interface ProductRecommendationsProps {
-  userPreferences?: string;
   currentProductId?: string;
 }
 
 export function ProductRecommendations({ 
-  userPreferences = "popular products",
   currentProductId 
 }: ProductRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { getPreferredCategories } = useBrowsingHistory();
+  const { user } = useAuth();
 
   const fetchRecommendations = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Get user's preferred categories from browsing history
+      let userPreferences = "popular products";
+      
+      if (user) {
+        const preferredCategories = await getPreferredCategories();
+        if (preferredCategories.length > 0) {
+          userPreferences = `interested in ${preferredCategories.slice(0, 3).join(", ")} products`;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke("product-recommendations", {
         body: { 
           userPreferences, 
@@ -76,7 +88,7 @@ export function ProductRecommendations({
     } finally {
       setIsLoading(false);
     }
-  }, [userPreferences, currentProductId]);
+  }, [user, currentProductId, getPreferredCategories]);
 
   useEffect(() => {
     fetchRecommendations();

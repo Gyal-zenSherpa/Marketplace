@@ -1,9 +1,10 @@
 import { forwardRef, useEffect } from "react";
-import { Star, ShoppingBag, Heart } from "lucide-react";
+import { Star, ShoppingBag, Heart, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
 import { useWishlistContext } from "@/context/WishlistContext";
+import { useCompare } from "@/context/CompareContext";
 import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
 
 interface ProductCardProps {
@@ -15,8 +16,10 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
   ({ product, index }, ref) => {
     const { addToCart } = useCart();
     const { isInWishlist, toggleWishlist, isLoading: wishlistLoading } = useWishlistContext();
+    const { addToCompare, isInCompare } = useCompare();
     const { trackProductView } = useBrowsingHistory();
     const isLiked = isInWishlist(product.id);
+    const isComparing = isInCompare(product.id);
 
     // Track product view when card is visible (simple implementation)
     useEffect(() => {
@@ -63,24 +66,42 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
             )}
           </div>
           
-          {/* Like/Wishlist button */}
-          <button
-            onClick={handleWishlistToggle}
-            disabled={wishlistLoading}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-all hover:bg-card hover:scale-110 disabled:opacity-50"
-          >
-            <Heart
-              className={`h-4 w-4 transition-colors ${
-                isLiked ? "fill-destructive text-destructive" : "text-muted-foreground"
+          {/* Action buttons */}
+          <div className="absolute right-3 top-3 flex flex-col gap-2">
+            {/* Like/Wishlist button */}
+            <button
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-all hover:bg-card hover:scale-110 disabled:opacity-50"
+            >
+              <Heart
+                className={`h-4 w-4 transition-colors ${
+                  isLiked ? "fill-destructive text-destructive" : "text-muted-foreground"
+                }`}
+              />
+            </button>
+            
+            {/* Compare button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addToCompare(product);
+              }}
+              className={`flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-all hover:scale-110 ${
+                isComparing 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-card/80 hover:bg-card text-muted-foreground"
               }`}
-            />
-          </button>
+            >
+              <Scale className="h-4 w-4" />
+            </button>
+          </div>
           
-          {/* Quick add overlay */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-foreground/80 to-transparent p-4 transition-transform duration-300 group-hover:translate-y-0">
+          {/* Quick add overlay - always visible on hover with yellow background */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-full p-4 transition-transform duration-300 group-hover:translate-y-0">
             <Button
               variant="secondary"
-              className="w-full bg-card transition-colors duration-200 hover:bg-yellow-400 hover:text-yellow-900"
+              className="w-full bg-yellow-400 text-yellow-900 font-semibold hover:bg-yellow-500 transition-colors duration-200"
               onClick={() => addToCart(product)}
               disabled={!product.inStock}
             >

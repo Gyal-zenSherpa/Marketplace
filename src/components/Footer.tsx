@@ -68,6 +68,14 @@ export function Footer() {
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
           <p>&copy; 2024 Marketplace. All rights reserved.</p>
+          <p className="mt-3 flex items-center justify-center gap-2">
+            Made by <span className="font-semibold text-foreground">Gyal-Zeen Sherpa</span>
+            <img 
+              src="https://flagcdn.com/w40/np.png" 
+              alt="Nepal Flag" 
+              className="h-4 w-auto inline-block"
+            />
+          </p>
         </div>
       </div>
     </footer>

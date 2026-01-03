@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
+import { SocialShare } from "@/components/SocialShare";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { products as staticProducts } from "@/data/products";
@@ -12,6 +13,7 @@ import { Product } from "@/types/product";
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
@@ -193,8 +195,17 @@ export default function ProductDetail() {
               </Button>
             </div>
 
+            {/* Social Share */}
+            <div className="pt-6 border-t border-border">
+              <SocialShare
+                url={`${window.location.origin}${location.pathname}`}
+                title={`Check out ${product.name} by ${product.brand}`}
+                description={product.description}
+              />
+            </div>
+
             {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-border">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Truck className="h-5 w-5 text-primary" />
                 <span className="text-sm">Free Shipping</span>

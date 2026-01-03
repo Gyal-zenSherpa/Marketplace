@@ -13,7 +13,7 @@ interface Message {
 export function ChatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hi! I'm your shopping assistant. How can I help you find the perfect product today?" }
+    { role: "assistant", content: "Hi! I'm Gyal-Zeen. How can I help you find the perfect product today?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -141,7 +141,7 @@ export function ChatAssistant() {
               <Bot className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Shopping Assistant</h3>
+              <h3 className="font-semibold text-foreground text-sm">Gyal-Zeen</h3>
               <p className="text-xs text-muted-foreground">AI-powered help</p>
             </div>
           </div>

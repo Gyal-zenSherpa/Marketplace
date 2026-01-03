@@ -178,6 +178,10 @@ export function Header() {
                   </p>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/wishlist")}>
                   <Heart className="h-4 w-4 mr-2" />
                   My Wishlist

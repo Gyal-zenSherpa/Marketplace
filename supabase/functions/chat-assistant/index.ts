@@ -24,29 +24,25 @@ serve(async (req) => {
       throw new Error('Supabase configuration is missing');
     }
 
-    // Verify authentication
+    // Try to get authenticated user (optional)
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let userId = 'anonymous';
+    
+    if (authHeader) {
+      try {
+        const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: { headers: { Authorization: authHeader } }
+        });
+        const { data: { user } } = await authClient.auth.getUser();
+        if (user) {
+          userId = user.id;
+        }
+      } catch (e) {
+        console.log('Auth check failed, continuing as anonymous');
+      }
     }
 
-    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      console.error('Auth error:', authError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('Authenticated user:', user.id);
+    console.log('User context:', userId);
 
     const { messages } = await req.json();
     

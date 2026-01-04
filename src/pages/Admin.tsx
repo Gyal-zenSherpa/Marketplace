@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import {
   Table,
@@ -20,9 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Shield,
   Users,
@@ -35,6 +45,7 @@ import {
   XCircle,
   Clock,
   Key,
+  Store,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -58,6 +69,17 @@ interface AuditLogEntry {
   ip_address: string | null;
   user_agent: string | null;
   metadata: unknown;
+  created_at: string;
+}
+
+interface SellerApplication {
+  id: string;
+  user_id: string;
+  business_name: string;
+  business_description: string;
+  phone_number: string | null;
+  status: string;
+  admin_notes: string | null;
   created_at: string;
 }
 
@@ -91,6 +113,14 @@ export default function Admin() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logSearch, setLogSearch] = useState("");
+
+  // Seller applications state
+  const [applications, setApplications] = useState<SellerApplication[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<SellerApplication | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [adminNotes, setAdminNotes] = useState("");
+  const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
 
   // Check if current user is admin
   useEffect(() => {
@@ -208,6 +238,83 @@ export default function Admin() {
     }
   };
 
+  // Fetch seller applications
+  const fetchApplications = async () => {
+    setApplicationsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("seller_applications")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setApplications(data || []);
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load seller applications.",
+      });
+    } finally {
+      setApplicationsLoading(false);
+    }
+  };
+
+  // Review seller application
+  const reviewApplication = async () => {
+    if (!selectedApplication) return;
+
+    try {
+      // Update application status
+      const { error: appError } = await supabase
+        .from("seller_applications")
+        .update({
+          status: reviewAction,
+          admin_notes: adminNotes || null,
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", selectedApplication.id);
+
+      if (appError) throw appError;
+
+      // If approved, update the user's profile to be a seller
+      if (reviewAction === "approved") {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ is_seller: true })
+          .eq("user_id", selectedApplication.user_id);
+
+        if (profileError) throw profileError;
+      }
+
+      toast({
+        title: `Application ${reviewAction}`,
+        description: `The seller application has been ${reviewAction}.`,
+      });
+
+      setReviewDialogOpen(false);
+      setSelectedApplication(null);
+      setAdminNotes("");
+      fetchApplications();
+    } catch (err) {
+      console.error("Error reviewing application:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process the application.",
+      });
+    }
+  };
+
+  const openReviewDialog = (app: SellerApplication, action: "approved" | "rejected") => {
+    setSelectedApplication(app);
+    setReviewAction(action);
+    setAdminNotes("");
+    setReviewDialogOpen(true);
+  };
+
   // Update user role
   const updateUserRole = async (userId: string, newRole: AppRole) => {
     try {
@@ -271,8 +378,12 @@ export default function Admin() {
     if (isAdmin) {
       fetchUsers();
       fetchAuditLogs();
+      fetchApplications();
     }
   }, [isAdmin]);
+
+  // Filter applications
+  const pendingApplications = applications.filter((a) => a.status === "pending");
 
   // Filter users based on search
   const filteredUsers = users.filter((u) => {
@@ -328,7 +439,7 @@ export default function Admin() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -338,6 +449,19 @@ export default function Admin() {
               <div className="text-2xl font-bold">{users.length}</div>
               <p className="text-xs text-muted-foreground">
                 {users.filter((u) => u.role === "admin").length} admins, {users.filter((u) => u.role === "seller").length} sellers
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
+              <Store className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingApplications.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Seller requests awaiting review
               </p>
             </CardContent>
           </Card>
@@ -371,8 +495,17 @@ export default function Admin() {
           </Card>
         </div>
 
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+        <Tabs defaultValue="applications" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+            <TabsTrigger value="applications" className="flex items-center gap-2">
+              <Store className="h-4 w-4" />
+              Applications
+              {pendingApplications.length > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {pendingApplications.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -386,6 +519,107 @@ export default function Admin() {
               Security
             </TabsTrigger>
           </TabsList>
+
+          {/* Seller Applications Tab */}
+          <TabsContent value="applications">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Seller Applications</CardTitle>
+                    <CardDescription>Review and manage seller applications</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={fetchApplications}
+                    disabled={applicationsLoading}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${applicationsLoading ? "animate-spin" : ""}`} />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Business Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Applied</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applications.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            {applicationsLoading ? "Loading applications..." : "No seller applications found"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        applications.map((app) => (
+                          <TableRow key={app.id}>
+                            <TableCell className="font-medium">{app.business_name}</TableCell>
+                            <TableCell className="max-w-xs truncate text-muted-foreground">
+                              {app.business_description}
+                            </TableCell>
+                            <TableCell>
+                              {app.status === "pending" && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Clock className="h-3 w-3" /> Pending
+                                </Badge>
+                              )}
+                              {app.status === "approved" && (
+                                <Badge className="gap-1 bg-green-500">
+                                  <CheckCircle className="h-3 w-3" /> Approved
+                                </Badge>
+                              )}
+                              {app.status === "rejected" && (
+                                <Badge variant="destructive" className="gap-1">
+                                  <XCircle className="h-3 w-3" /> Rejected
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(app.created_at), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {app.status === "pending" ? (
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={() => openReviewDialog(app, "approved")}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => openReviewDialog(app, "rejected")}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">Reviewed</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* User Management Tab */}
           <TabsContent value="users">
@@ -604,6 +838,58 @@ export default function Admin() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Review Application Dialog */}
+        <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {reviewAction === "approved" ? "Approve" : "Reject"} Application
+              </DialogTitle>
+              <DialogDescription>
+                {reviewAction === "approved"
+                  ? "This will grant the user seller privileges."
+                  : "Please provide a reason for rejection."}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedApplication && (
+              <div className="space-y-4">
+                <div className="bg-muted rounded-lg p-4 space-y-2">
+                  <p className="font-medium">{selectedApplication.business_name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedApplication.business_description}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin_notes">
+                    {reviewAction === "rejected" ? "Rejection Reason *" : "Notes (optional)"}
+                  </Label>
+                  <Textarea
+                    id="admin_notes"
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder={
+                      reviewAction === "rejected"
+                        ? "Please explain why this application was rejected..."
+                        : "Add any notes about this decision..."
+                    }
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={reviewApplication}
+                variant={reviewAction === "approved" ? "default" : "destructive"}
+                disabled={reviewAction === "rejected" && !adminNotes.trim()}
+              >
+                {reviewAction === "approved" ? "Approve" : "Reject"} Application
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

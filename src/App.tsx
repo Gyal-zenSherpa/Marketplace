@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import SellerDashboard from "./pages/SellerDashboard";
+import SellerApplication from "./pages/SellerApplication";
 import Admin from "./pages/Admin";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
@@ -38,6 +39,7 @@ const App = () => {
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/seller" element={<SellerDashboard />} />
+                    <Route path="/become-seller" element={<SellerApplication />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/profile" element={<Profile />} />

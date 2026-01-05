@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Truck, ShoppingBag } from "lucide-react";
+import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
@@ -21,11 +22,21 @@ const shippingSchema = z.object({
   phone: z.string().trim().min(1, "Phone is required").max(20),
 });
 
+interface PaymentQRCode {
+  id: string;
+  name: string;
+  type: string;
+  image_url: string | null;
+  display_order: number;
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
+  const [paymentQRCodes, setPaymentQRCodes] = useState<PaymentQRCode[]>([]);
   const [formData, setFormData] = useState({
     fullName: "",
     address: "",
@@ -34,6 +45,22 @@ export default function Checkout() {
     zipCode: "",
     phone: "",
   });
+
+  useEffect(() => {
+    const fetchPaymentQRCodes = async () => {
+      const { data, error } = await supabase
+        .from("payment_qr_codes")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
+
+      if (!error && data) {
+        setPaymentQRCodes(data);
+      }
+    };
+
+    fetchPaymentQRCodes();
+  }, []);
 
   if (cartItems.length === 0) {
     return (
@@ -80,8 +107,8 @@ export default function Checkout() {
         .from("orders")
         .insert({
           user_id: user.id,
-          total: totalPrice,
-          shipping_address: validated,
+          total: grandTotal,
+          shipping_address: { ...validated, paymentMethod },
           status: "pending",
         })
         .select()
@@ -107,7 +134,9 @@ export default function Checkout() {
       clearCart();
       toast({
         title: "Order placed!",
-        description: "Thank you for your purchase. Your order has been confirmed.",
+        description: paymentMethod === "cod" 
+          ? "Thank you! Pay when your order arrives." 
+          : "Thank you! Please complete payment using the QR code provided.",
       });
       navigate("/");
     } catch (err) {
@@ -132,6 +161,8 @@ export default function Checkout() {
   const shipping = 0;
   const tax = totalPrice * 0.1;
   const grandTotal = totalPrice + shipping + tax;
+
+  const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,7 +196,7 @@ export default function Checkout() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  placeholder="John Doe"
+                  placeholder="Ram Bahadur"
                   required
                 />
               </div>
@@ -177,7 +208,7 @@ export default function Checkout() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="123 Main Street"
+                  placeholder="Thamel, Kathmandu"
                   required
                 />
               </div>
@@ -190,18 +221,18 @@ export default function Checkout() {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="New York"
+                    placeholder="Kathmandu"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
+                  <Label htmlFor="state">Province</Label>
                   <Input
                     id="state"
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    placeholder="NY"
+                    placeholder="Bagmati"
                     required
                   />
                 </div>
@@ -209,13 +240,13 @@ export default function Checkout() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="zipCode">ZIP Code</Label>
+                  <Label htmlFor="zipCode">Postal Code</Label>
                   <Input
                     id="zipCode"
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
-                    placeholder="10001"
+                    placeholder="44600"
                     required
                   />
                 </div>
@@ -227,21 +258,10 @@ export default function Checkout() {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+977 9800000000"
                     required
                   />
                 </div>
-              </div>
-
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  className="w-full gradient-hero text-primary-foreground h-12"
-                  disabled={isProcessing}
-                >
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  {isProcessing ? "Processing..." : `Place Order - $${grandTotal.toFixed(2)}`}
-                </Button>
               </div>
             </form>
           </div>
@@ -263,7 +283,7 @@ export default function Checkout() {
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
                   <span className="font-medium text-foreground">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -272,7 +292,7 @@ export default function Checkout() {
             <div className="border-t border-border pt-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="text-foreground">${totalPrice.toFixed(2)}</span>
+                <span className="text-foreground">{formatPrice(totalPrice)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
@@ -280,12 +300,92 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax (10%)</span>
-                <span className="text-foreground">${tax.toFixed(2)}</span>
+                <span className="text-foreground">{formatPrice(tax)}</span>
               </div>
               <div className="flex justify-between pt-3 border-t border-border">
                 <span className="font-semibold text-foreground">Total</span>
-                <span className="font-bold text-xl text-foreground">${grandTotal.toFixed(2)}</span>
+                <span className="font-bold text-xl text-foreground">{formatPrice(grandTotal)}</span>
               </div>
+            </div>
+
+            {/* Payment Method Selection */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                Payment Method
+              </h3>
+              
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(value) => setPaymentMethod(value as "cod" | "online")}
+                className="space-y-3"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer">
+                  <RadioGroupItem value="cod" id="cod" />
+                  <Label htmlFor="cod" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <Banknote className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium">Cash on Delivery (COD)</p>
+                      <p className="text-sm text-muted-foreground">Pay when your order arrives</p>
+                    </div>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer">
+                  <RadioGroupItem value="online" id="online" />
+                  <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <QrCode className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium">Online Payment</p>
+                      <p className="text-sm text-muted-foreground">Pay via Bank Transfer or Esewa</p>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {/* QR Codes for Online Payment */}
+              {paymentMethod === "online" && (
+                <div className="mt-6 p-4 bg-secondary/50 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-4">Scan QR Code to Pay</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    {paymentQRCodes.map((qr) => (
+                      <div key={qr.id} className="text-center">
+                        <div className="aspect-square rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden mb-2">
+                          {qr.image_url ? (
+                            <img
+                              src={qr.image_url}
+                              alt={qr.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center text-muted-foreground">
+                              <ImageIcon className="h-8 w-8 mb-1" />
+                              <span className="text-xs">No QR</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium text-foreground">{qr.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4 text-center">
+                    After payment, click "Place Order" to confirm your purchase
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Place Order Button */}
+            <div className="mt-6">
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                className="w-full gradient-hero text-primary-foreground h-12"
+                disabled={isProcessing}
+              >
+                <CreditCard className="h-5 w-5 mr-2" />
+                {isProcessing ? "Processing..." : `Place Order - ${formatPrice(grandTotal)}`}
+              </Button>
             </div>
           </div>
         </div>

@@ -82,7 +82,7 @@ export function CartSidebar() {
                         {item.name}
                       </h3>
                       <span className="text-sm font-bold text-foreground">
-                        ${item.price.toFixed(2)}
+                        Rs. {item.price.toFixed(2)}
                       </span>
                       
                       <div className="mt-auto flex items-center justify-between">
@@ -127,7 +127,7 @@ export function CartSidebar() {
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-xl font-bold text-card-foreground">
-                  ${totalPrice.toFixed(2)}
+                  Rs. {totalPrice.toFixed(2)}
                 </span>
               </div>
               <Button variant="hero" className="mb-3 w-full" size="lg" onClick={handleCheckout}>

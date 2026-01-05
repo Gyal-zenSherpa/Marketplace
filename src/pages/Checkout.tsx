@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon } from "lucide-react";
+import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,10 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
   const [paymentQRCodes, setPaymentQRCodes] = useState<PaymentQRCode[]>([]);
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const paymentProofInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     address: "",
@@ -84,6 +88,66 @@ export default function Checkout() {
     }));
   };
 
+  const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPaymentProof(file);
+    setPaymentProofPreview(URL.createObjectURL(file));
+  };
+
+  const removePaymentProof = () => {
+    setPaymentProof(null);
+    setPaymentProofPreview(null);
+    if (paymentProofInputRef.current) {
+      paymentProofInputRef.current.value = "";
+    }
+  };
+
+  const uploadPaymentProof = async (orderId: string): Promise<string | null> => {
+    if (!paymentProof || !user) return null;
+
+    try {
+      const fileExt = paymentProof.name.split(".").pop();
+      const fileName = `${user.id}/${orderId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("payment-proofs")
+        .upload(fileName, paymentProof, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("payment-proofs")
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Payment proof upload error:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -94,6 +158,16 @@ export default function Checkout() {
         description: "Please login to complete your order",
       });
       navigate("/auth");
+      return;
+    }
+
+    // Validate payment proof for online payments
+    if (paymentMethod === "online" && !paymentProof) {
+      toast({
+        variant: "destructive",
+        title: "Payment proof required",
+        description: "Please upload a screenshot of your payment.",
+      });
       return;
     }
 
@@ -116,6 +190,22 @@ export default function Checkout() {
 
       if (orderError) throw orderError;
 
+      // Upload payment proof if online payment
+      let paymentProofUrl: string | null = null;
+      if (paymentMethod === "online" && paymentProof) {
+        setUploadingProof(true);
+        paymentProofUrl = await uploadPaymentProof(order.id);
+        setUploadingProof(false);
+
+        if (paymentProofUrl) {
+          // Update order with payment proof URL
+          await supabase
+            .from("orders")
+            .update({ payment_proof_url: paymentProofUrl })
+            .eq("id", order.id);
+        }
+      }
+
       // Create order items
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -136,9 +226,9 @@ export default function Checkout() {
         title: "Order placed!",
         description: paymentMethod === "cod" 
           ? "Thank you! Pay when your order arrives." 
-          : "Thank you! Please complete payment using the QR code provided.",
+          : "Thank you! Your payment proof has been submitted.",
       });
-      navigate("/");
+      navigate("/orders");
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast({
@@ -155,6 +245,7 @@ export default function Checkout() {
       }
     } finally {
       setIsProcessing(false);
+      setUploadingProof(false);
     }
   };
 
@@ -368,9 +459,52 @@ export default function Checkout() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-4 text-center">
-                    After payment, click "Place Order" to confirm your purchase
-                  </p>
+
+                  {/* Payment Proof Upload */}
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Upload Payment Screenshot
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Please upload a screenshot of your payment confirmation
+                    </p>
+                    
+                    {paymentProofPreview ? (
+                      <div className="relative w-full max-w-xs mx-auto">
+                        <img
+                          src={paymentProofPreview}
+                          alt="Payment proof preview"
+                          className="w-full rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-8 w-8"
+                          onClick={removePaymentProof}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => paymentProofInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+                      >
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Click to upload payment screenshot</p>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+                      </div>
+                    )}
+                    <input
+                      ref={paymentProofInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePaymentProofChange}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
               )}
             </div>

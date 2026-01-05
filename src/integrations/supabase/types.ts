@@ -155,6 +155,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          payment_proof_url: string | null
           shipping_address: Json | null
           status: string
           total: number
@@ -164,6 +165,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          payment_proof_url?: string | null
           shipping_address?: Json | null
           status?: string
           total: number
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          payment_proof_url?: string | null
           shipping_address?: Json | null
           status?: string
           total?: number

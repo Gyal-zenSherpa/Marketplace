@@ -127,6 +127,10 @@ export function ChatAssistant() {
         )}
       >
         <MessageCircle className="h-6 w-6" />
+        {/* Notification badge */}
+        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
+          1
+        </span>
       </button>
 
       {/* Chat Window */}

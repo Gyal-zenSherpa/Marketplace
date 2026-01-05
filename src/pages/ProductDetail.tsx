@@ -154,11 +154,11 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-bold text-foreground">
-                ${product.price.toFixed(2)}
+                Rs. {product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-muted-foreground line-through">
-                  ${product.originalPrice.toFixed(2)}
+                  Rs. {product.originalPrice.toFixed(2)}
                 </span>
               )}
             </div>

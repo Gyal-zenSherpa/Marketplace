@@ -289,9 +289,25 @@ export default function Admin() {
         if (profileError) throw profileError;
       }
 
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-application-email', {
+          body: {
+            userId: selectedApplication.user_id,
+            businessName: selectedApplication.business_name,
+            status: reviewAction,
+            adminNotes: adminNotes || undefined,
+          },
+        });
+        console.log("Email notification sent successfully");
+      } catch (emailErr) {
+        console.error("Failed to send email notification:", emailErr);
+        // Don't fail the whole operation if email fails
+      }
+
       toast({
         title: `Application ${reviewAction}`,
-        description: `The seller application has been ${reviewAction}.`,
+        description: `The seller application has been ${reviewAction}. An email notification has been sent.`,
       });
 
       setReviewDialogOpen(false);
@@ -307,7 +323,6 @@ export default function Admin() {
       });
     }
   };
-
   const openReviewDialog = (app: SellerApplication, action: "approved" | "rejected") => {
     setSelectedApplication(app);
     setReviewAction(action);

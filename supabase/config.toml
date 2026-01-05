@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.admin-2fa]
 verify_jwt = false
+
+[functions.send-application-email]
+verify_jwt = false

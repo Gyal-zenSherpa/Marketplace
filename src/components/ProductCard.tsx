@@ -142,11 +142,11 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
           {/* Price */}
           <div className="mt-auto flex items-baseline gap-2">
             <span className="text-xl font-bold text-foreground">
-              ${product.price.toFixed(2)}
+              Rs. {product.price.toFixed(2)}
             </span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice.toFixed(2)}
+                Rs. {product.originalPrice.toFixed(2)}
               </span>
             )}
           </div>

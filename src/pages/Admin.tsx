@@ -46,6 +46,9 @@ import {
   Clock,
   Key,
   Store,
+  Package,
+  Truck,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -82,6 +85,32 @@ interface SellerApplication {
   admin_notes: string | null;
   created_at: string;
 }
+
+interface OrderItem {
+  id: string;
+  product_name: string;
+  product_price: number;
+  quantity: number;
+}
+
+interface AdminOrder {
+  id: string;
+  user_id: string;
+  total: number;
+  status: string;
+  created_at: string;
+  shipping_address: {
+    fullName?: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+    paymentMethod?: string;
+  } | null;
+  payment_proof_url: string | null;
+  order_items: OrderItem[];
+}
+
+const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: "bg-red-500/10 text-red-500 border-red-500/20",
@@ -121,6 +150,13 @@ export default function Admin() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
+
+  // Orders state
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
 
   // Check if current user is admin
   useEffect(() => {
@@ -261,6 +297,74 @@ export default function Admin() {
     }
   };
 
+  // Fetch orders
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          user_id,
+          total,
+          status,
+          created_at,
+          shipping_address,
+          payment_proof_url,
+          order_items (
+            id,
+            product_name,
+            product_price,
+            quantity
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setOrders((data as AdminOrder[]) || []);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load orders.",
+      });
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  // Update order status
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+
+      toast({
+        title: "Order updated",
+        description: `Order status changed to ${newStatus}`,
+      });
+    } catch (err) {
+      console.error("Error updating order:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update order status.",
+      });
+    }
+  };
+
   // Review seller application
   const reviewApplication = async () => {
     if (!selectedApplication) return;
@@ -394,6 +498,7 @@ export default function Admin() {
       fetchUsers();
       fetchAuditLogs();
       fetchApplications();
+      fetchOrders();
     }
   }, [isAdmin]);
 
@@ -419,6 +524,18 @@ export default function Admin() {
       log.ip_address?.toLowerCase().includes(search)
     );
   });
+
+  // Filter orders based on search
+  const filteredOrders = orders.filter((order) => {
+    const search = orderSearch.toLowerCase();
+    return (
+      order.id.toLowerCase().includes(search) ||
+      order.status.toLowerCase().includes(search) ||
+      order.shipping_address?.fullName?.toLowerCase().includes(search)
+    );
+  });
+
+  const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
 
   if (loading || checkingAccess) {
     return (
@@ -511,7 +628,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <Store className="h-4 w-4" />
               Applications
@@ -520,6 +637,13 @@ export default function Admin() {
                   {pendingApplications.length}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Orders
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {orders.length}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -625,6 +749,115 @@ export default function Admin() {
                               ) : (
                                 <span className="text-muted-foreground text-sm">Reviewed</span>
                               )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Management Tab */}
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Order Management</CardTitle>
+                    <CardDescription>View and manage customer orders</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search orders..."
+                        value={orderSearch}
+                        onChange={(e) => setOrderSearch(e.target.value)}
+                        className="pl-9 w-64"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={fetchOrders}
+                      disabled={ordersLoading}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${ordersLoading ? "animate-spin" : ""}`} />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Payment</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            {ordersLoading ? "Loading orders..." : "No orders found"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredOrders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-mono text-xs">
+                              #{order.id.slice(0, 8).toUpperCase()}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {order.shipping_address?.fullName || "—"}
+                            </TableCell>
+                            <TableCell>{formatPrice(order.total)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {order.shipping_address?.paymentMethod === "online" ? "Online" : "COD"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={order.status}
+                                onValueChange={(value) => updateOrderStatus(order.id, value)}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {ORDER_STATUSES.map((status) => (
+                                    <SelectItem key={status} value={status}>
+                                      <span className="capitalize">{status}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {format(new Date(order.created_at), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setOrderDetailOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))
@@ -903,6 +1136,106 @@ export default function Admin() {
                 {reviewAction === "approved" ? "Approve" : "Reject"} Application
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Order Detail Dialog */}
+        <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Details</DialogTitle>
+              <DialogDescription>
+                Order #{selectedOrder?.id.slice(0, 8).toUpperCase()}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedOrder && (
+              <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Customer</h4>
+                    <div className="bg-muted rounded-lg p-3 text-sm">
+                      <p className="font-medium">{selectedOrder.shipping_address?.fullName}</p>
+                      <p className="text-muted-foreground">{selectedOrder.shipping_address?.phone}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Shipping Address</h4>
+                    <div className="bg-muted rounded-lg p-3 text-sm text-muted-foreground">
+                      <p>{selectedOrder.shipping_address?.address}</p>
+                      <p>{selectedOrder.shipping_address?.city}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div>
+                  <h4 className="font-semibold mb-2">Items</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.order_items.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{item.product_name}</p>
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-medium">{formatPrice(item.product_price * item.quantity)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Payment Method</h4>
+                    <Badge variant="outline">
+                      {selectedOrder.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Status</h4>
+                    <Select
+                      value={selectedOrder.status}
+                      onValueChange={(value) => {
+                        updateOrderStatus(selectedOrder.id, value);
+                        setSelectedOrder({ ...selectedOrder, status: value });
+                      }}
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORDER_STATUSES.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            <span className="capitalize">{status}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Payment Proof */}
+                {selectedOrder.payment_proof_url && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Payment Proof</h4>
+                    <a href={selectedOrder.payment_proof_url} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={selectedOrder.payment_proof_url}
+                        alt="Payment proof"
+                        className="w-full max-w-xs rounded-lg border hover:opacity-90 transition-opacity cursor-pointer"
+                      />
+                    </a>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <span className="font-semibold text-lg">Total</span>
+                  <span className="text-2xl font-bold">{formatPrice(selectedOrder.total)}</span>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

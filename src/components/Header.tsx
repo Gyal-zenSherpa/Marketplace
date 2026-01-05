@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Scale } from "lucide-react";
+import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Scale, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -189,6 +189,10 @@ export function Header() {
                 <DropdownMenuItem onClick={() => navigate("/profile")}>
                   <User className="h-4 w-4 mr-2" />
                   My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/orders")}>
+                  <Package className="h-4 w-4 mr-2" />
+                  My Orders
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/wishlist")}>
                   <Heart className="h-4 w-4 mr-2" />

@@ -106,6 +106,119 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      loyalty_rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          min_order_value: number | null
+          name: string
+          points_required: number
+          product_id: string | null
+          reward_type: string
+          reward_value: number | null
+          times_redeemed: number | null
+          updated_at: string
+          usage_limit: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_order_value?: number | null
+          name: string
+          points_required: number
+          product_id?: string | null
+          reward_type: string
+          reward_value?: number | null
+          times_redeemed?: number | null
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_order_value?: number | null
+          name?: string
+          points_required?: number
+          product_id?: string | null
+          reward_type?: string
+          reward_value?: number | null
+          times_redeemed?: number | null
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_tiers: {
+        Row: {
+          badge_color: string | null
+          benefits: string[] | null
+          created_at: string
+          display_order: number
+          id: string
+          min_points: number
+          name: string
+          points_multiplier: number
+        }
+        Insert: {
+          badge_color?: string | null
+          benefits?: string[] | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          min_points?: number
+          name: string
+          points_multiplier?: number
+        }
+        Update: {
+          badge_color?: string | null
+          benefits?: string[] | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          min_points?: number
+          name?: string
+          points_multiplier?: number
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -217,6 +330,105 @@ export type Database = {
         }
         Relationships: []
       }
+      points_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          source: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          source: string
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          source?: string
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_reviews: {
+        Row: {
+          badges: string[] | null
+          content: string | null
+          created_at: string
+          helpful_count: number | null
+          id: string
+          is_verified_purchase: boolean | null
+          order_id: string | null
+          product_id: string
+          rating: number
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_verified_purchase?: boolean | null
+          order_id?: string | null
+          product_id: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_verified_purchase?: boolean | null
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string
@@ -325,6 +537,118 @@ export type Database = {
         }
         Relationships: []
       }
+      review_media: {
+        Row: {
+          created_at: string
+          id: string
+          media_type: string
+          media_url: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_type: string
+          media_url: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_media_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_redemptions: {
+        Row: {
+          code: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          points_used: number
+          reward_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points_used: number
+          reward_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points_used?: number
+          reward_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -402,6 +726,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_loyalty: {
+        Row: {
+          available_points: number
+          created_at: string
+          current_tier: string | null
+          first_order_bonus_claimed: boolean | null
+          id: string
+          lifetime_points: number
+          pending_points: number
+          signup_bonus_claimed: boolean | null
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_points?: number
+          created_at?: string
+          current_tier?: string | null
+          first_order_bonus_claimed?: boolean | null
+          id?: string
+          lifetime_points?: number
+          pending_points?: number
+          signup_bonus_claimed?: boolean | null
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_points?: number
+          created_at?: string
+          current_tier?: string | null
+          first_order_bonus_claimed?: boolean | null
+          id?: string
+          lifetime_points?: number
+          pending_points?: number
+          signup_bonus_claimed?: boolean | null
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_loyalty_current_tier_fkey"
+            columns: ["current_tier"]
+            isOneToOne: false
+            referencedRelation: "loyalty_tiers"
+            referencedColumns: ["name"]
+          },
+        ]
       }
       user_roles: {
         Row: {

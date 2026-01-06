@@ -49,9 +49,11 @@ import {
   Package,
   Truck,
   Eye,
+  CreditCard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
+import { PaymentQRManager } from "@/components/admin/PaymentQRManager";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -628,7 +630,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-4xl">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <Store className="h-4 w-4" />
               Applications
@@ -644,6 +646,10 @@ export default function Admin() {
               <Badge variant="secondary" className="ml-1 text-xs">
                 {orders.length}
               </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payments
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -867,6 +873,11 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Payment QR Codes Tab */}
+          <TabsContent value="payments">
+            <PaymentQRManager />
           </TabsContent>
 
           {/* User Management Tab */}

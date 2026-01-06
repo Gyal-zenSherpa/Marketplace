@@ -1,5 +1,6 @@
 import { forwardRef, useEffect } from "react";
-import { Star, ShoppingBag, Heart, Scale } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Star, ShoppingBag, Heart, Scale, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
@@ -14,6 +15,7 @@ interface ProductCardProps {
 
 export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
   ({ product, index }, ref) => {
+    const navigate = useNavigate();
     const { addToCart } = useCart();
     const { isInWishlist, toggleWishlist, isLoading: wishlistLoading } = useWishlistContext();
     const { addToCompare, isInCompare } = useCompare();
@@ -38,11 +40,18 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
       await toggleWishlist(product.id);
     };
 
+    const handleBuyNow = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      addToCart(product);
+      navigate("/checkout");
+    };
+
     return (
       <div
         ref={ref}
-        className="group relative flex flex-col overflow-hidden rounded-xl bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 animate-fade-in"
+        className="group relative flex flex-col overflow-hidden rounded-xl bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 animate-fade-in cursor-pointer"
         style={{ animationDelay: `${index * 100}ms` }}
+        onClick={() => navigate(`/product/${product.id}`)}
       >
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-secondary">
@@ -97,17 +106,30 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
             </button>
           </div>
           
-          {/* Quick add overlay - always visible on hover with yellow background */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full p-4 transition-transform duration-300 group-hover:translate-y-0">
-            <Button
-              variant="secondary"
-              className="w-full bg-yellow-400 text-yellow-900 font-semibold hover:bg-yellow-500 transition-colors duration-200"
-              onClick={() => addToCart(product)}
-              disabled={!product.inStock}
-            >
-              <ShoppingBag className="h-4 w-4" />
-              {product.inStock ? "Add to Cart" : "Out of Stock"}
-            </Button>
+          {/* Quick actions overlay - always visible on hover */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-full p-3 transition-transform duration-300 group-hover:translate-y-0">
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                className="flex-1 bg-yellow-400 text-yellow-900 font-semibold hover:bg-yellow-500 transition-colors duration-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addToCart(product);
+                }}
+                disabled={!product.inStock}
+              >
+                <ShoppingBag className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+              <Button
+                className="flex-1 gradient-hero text-primary-foreground font-semibold"
+                onClick={handleBuyNow}
+                disabled={!product.inStock}
+              >
+                <Zap className="h-4 w-4 mr-1" />
+                Buy Now
+              </Button>
+            </div>
           </div>
         </div>
 

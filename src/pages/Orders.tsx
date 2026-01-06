@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { OrderInvoice } from "@/components/orders/OrderInvoice";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -201,6 +202,7 @@ export default function Orders() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
+                        <OrderInvoice order={order} />
                       </div>
                     </div>
                   </CardContent>

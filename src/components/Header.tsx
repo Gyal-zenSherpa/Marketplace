@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Scale, Package } from "lucide-react";
+import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Scale, Package, Coins } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlistContext } from "@/context/WishlistContext";
 import { useCompare } from "@/context/CompareContext";
+import { LoyaltyWidget } from "@/components/loyalty/LoyaltyWidget";
 import { supabase } from "@/integrations/supabase/client";
 
 export function Header() {
@@ -116,6 +117,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Loyalty Points Widget */}
+          {user && <LoyaltyWidget />}
+
           {/* Compare button */}
           <Button
             variant="secondary"

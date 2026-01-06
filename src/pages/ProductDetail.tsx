@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react";
+import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
 import { SocialShare } from "@/components/SocialShare";
+import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { products as staticProducts } from "@/data/products";
@@ -88,6 +89,13 @@ export default function ProductDetail() {
     }
   };
 
+  const handleBuyNow = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    navigate("/checkout");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -168,8 +176,8 @@ export default function ProductDetail() {
               {product.description}
             </p>
 
-            {/* Quantity & Add to Cart */}
-            <div className="flex items-center gap-4 mb-8">
+            {/* Quantity & Actions */}
+            <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center border border-border rounded-lg">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -188,12 +196,23 @@ export default function ProductDetail() {
               <Button
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className="flex-1 gradient-hero text-primary-foreground h-12"
+                variant="outline"
+                className="flex-1 h-12"
               >
                 <ShoppingBag className="h-5 w-5 mr-2" />
                 {product.inStock ? "Add to Cart" : "Out of Stock"}
               </Button>
             </div>
+
+            {/* Buy Now Button */}
+            <Button
+              onClick={handleBuyNow}
+              disabled={!product.inStock}
+              className="w-full gradient-hero text-primary-foreground h-12 mb-6"
+            >
+              <Zap className="h-5 w-5 mr-2" />
+              Buy Now
+            </Button>
 
             {/* Social Share */}
             <div className="pt-6 border-t border-border">
@@ -221,6 +240,13 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Product Reviews Section */}
+        {id && (
+          <div className="mt-16">
+            <ProductReviews productId={id} />
+          </div>
+        )}
       </main>
       <CartSidebar />
       <Footer />

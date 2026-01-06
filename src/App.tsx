@@ -18,6 +18,8 @@ import Admin from "./pages/Admin";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
+import Loyalty from "./pages/Loyalty";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,8 @@ const App = () => {
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/loyalty" element={<Loyalty />} />
+                    <Route path="/terms" element={<TermsAndConditions />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>

@@ -30,16 +30,20 @@ interface PaymentQRCode {
   display_order: number;
 }
 
+type PaymentType = "bank" | "esewa" | "other";
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
+  const [selectedPaymentType, setSelectedPaymentType] = useState<PaymentType | null>(null);
   const [paymentQRCodes, setPaymentQRCodes] = useState<PaymentQRCode[]>([]);
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const paymentProofInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -437,89 +441,143 @@ export default function Checkout() {
               {/* QR Codes for Online Payment */}
               {paymentMethod === "online" && (
                 <div className="mt-6 p-4 bg-secondary/50 rounded-lg">
-                  <h4 className="font-medium text-foreground mb-4">Scan QR Code to Pay</h4>
-                  <div className="grid grid-cols-3 gap-4">
+                  <h4 className="font-medium text-foreground mb-4">Select Payment Method</h4>
+                  
+                  {/* Payment Type Selection */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
                     {paymentQRCodes.map((qr) => (
-                      <div key={qr.id} className="text-center">
-                        <div className="aspect-square rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden mb-2">
-                          {qr.image_url ? (
-                            <img
-                              src={qr.image_url}
-                              alt={qr.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center text-muted-foreground">
-                              <ImageIcon className="h-8 w-8 mb-1" />
-                              <span className="text-xs">No QR</span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-sm font-medium text-foreground">{qr.name}</p>
-                      </div>
+                      <button
+                        key={qr.id}
+                        type="button"
+                        onClick={() => setSelectedPaymentType(qr.type as PaymentType)}
+                        className={`p-3 rounded-lg border-2 text-center transition-all ${
+                          selectedPaymentType === qr.type
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <span className="font-medium text-sm">{qr.name}</span>
+                      </button>
                     ))}
                   </div>
 
+                  {/* Show selected QR code */}
+                  {selectedPaymentType && (
+                    <div className="text-center mb-4">
+                      {(() => {
+                        const selectedQR = paymentQRCodes.find((qr) => qr.type === selectedPaymentType);
+                        return selectedQR?.image_url ? (
+                          <div className="inline-block">
+                            <img
+                              src={selectedQR.image_url}
+                              alt={selectedQR.name}
+                              className="w-48 h-48 object-contain rounded-lg border-2 border-border mx-auto"
+                            />
+                            <p className="mt-2 text-sm font-medium">{selectedQR.name}</p>
+                            <p className="text-xs text-muted-foreground">Scan to pay</p>
+                          </div>
+                        ) : (
+                          <div className="w-48 h-48 mx-auto rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                            <div className="text-center text-muted-foreground">
+                              <ImageIcon className="h-10 w-10 mx-auto mb-2" />
+                              <p className="text-sm">QR not available</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
                   {/* Payment Proof Upload */}
-                  <div className="mt-6 pt-4 border-t border-border">
-                    <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      Upload Payment Screenshot
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Please upload a screenshot of your payment confirmation
-                    </p>
-                    
-                    {paymentProofPreview ? (
-                      <div className="relative w-full max-w-xs mx-auto">
-                        <img
-                          src={paymentProofPreview}
-                          alt="Payment proof preview"
-                          className="w-full rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-8 w-8"
-                          onClick={removePaymentProof}
+                  {selectedPaymentType && (
+                    <div className="mt-6 pt-4 border-t border-border">
+                      <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        Upload Payment Screenshot
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Please upload a screenshot of your payment confirmation
+                      </p>
+                      
+                      {paymentProofPreview ? (
+                        <div className="relative w-full max-w-xs mx-auto">
+                          <img
+                            src={paymentProofPreview}
+                            alt="Payment proof preview"
+                            className="w-full rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-8 w-8"
+                            onClick={removePaymentProof}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => paymentProofInputRef.current?.click()}
+                          className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => paymentProofInputRef.current?.click()}
-                        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
-                      >
-                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Click to upload payment screenshot</p>
-                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
-                      </div>
-                    )}
-                    <input
-                      ref={paymentProofInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePaymentProofChange}
-                      className="hidden"
-                    />
-                  </div>
+                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">Click to upload payment screenshot</p>
+                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+                        </div>
+                      )}
+                      <input
+                        ref={paymentProofInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePaymentProofChange}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Place Order Button */}
-            <div className="mt-6">
+            {/* Terms and Place Order */}
+            <div className="mt-6 space-y-4">
+              {/* Terms and Conditions */}
+              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border"
+                />
+                <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                  👇 Read the{" "}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Terms and Conditions
+                  </a>{" "}
+                  carefully before placing your order. By checking this box, you agree to our terms.
+                </label>
+              </div>
+
               <Button
                 type="submit"
                 onClick={handleSubmit}
                 className="w-full gradient-hero text-primary-foreground h-12"
-                disabled={isProcessing}
+                disabled={isProcessing || !agreedToTerms || (paymentMethod === "online" && (!selectedPaymentType || !paymentProof))}
               >
                 <CreditCard className="h-5 w-5 mr-2" />
                 {isProcessing ? "Processing..." : `Place Order - ${formatPrice(grandTotal)}`}
               </Button>
+
+              {!agreedToTerms && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Please agree to Terms and Conditions to proceed
+                </p>
+              )}
             </div>
           </div>
         </div>

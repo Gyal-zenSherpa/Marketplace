@@ -180,6 +180,13 @@ export default function Checkout() {
     try {
       const validated = shippingSchema.parse(formData);
 
+      // Record T&C agreement
+      await supabase.from("terms_agreements").insert({
+        user_id: user.id,
+        version: "1.0",
+        user_agent: navigator.userAgent,
+      });
+
       // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")

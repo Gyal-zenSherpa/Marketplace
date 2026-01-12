@@ -487,6 +487,8 @@ export type Database = {
           full_name: string | null
           id: string
           is_seller: boolean | null
+          referral_code: string | null
+          referred_by: string | null
           updated_at: string
           user_id: string
         }
@@ -496,6 +498,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_seller?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id: string
         }
@@ -505,6 +509,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_seller?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -534,6 +540,45 @@ export type Database = {
           identifier?: string
           request_count?: number | null
           window_start?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          first_purchase_at: string | null
+          id: string
+          points_awarded: number | null
+          referral_code: string
+          referred_email: string
+          referred_user_id: string | null
+          referrer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_purchase_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code: string
+          referred_email: string
+          referred_user_id?: string | null
+          referrer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_purchase_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code?: string
+          referred_email?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -724,6 +769,36 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      terms_agreements: {
+        Row: {
+          agreed_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          agreed_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: string
+        }
+        Update: {
+          agreed_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
         }
         Relationships: []
       }

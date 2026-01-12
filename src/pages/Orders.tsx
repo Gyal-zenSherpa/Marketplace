@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye } from "lucide-react";
+import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye, MapPin, Phone, User, CreditCard, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,12 +40,12 @@ interface Order {
   order_items: OrderItem[];
 }
 
-const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  pending: { icon: <Clock className="h-4 w-4" />, color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20", label: "Pending" },
-  processing: { icon: <Package className="h-4 w-4" />, color: "bg-blue-500/10 text-blue-600 border-blue-500/20", label: "Processing" },
-  shipped: { icon: <Truck className="h-4 w-4" />, color: "bg-purple-500/10 text-purple-600 border-purple-500/20", label: "Shipped" },
-  delivered: { icon: <CheckCircle className="h-4 w-4" />, color: "bg-green-500/10 text-green-600 border-green-500/20", label: "Delivered" },
-  cancelled: { icon: <XCircle className="h-4 w-4" />, color: "bg-red-500/10 text-red-600 border-red-500/20", label: "Cancelled" },
+const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string; bgColor: string }> = {
+  pending: { icon: <Clock className="h-4 w-4" />, color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20", label: "Pending", bgColor: "from-yellow-500/20 to-yellow-600/20" },
+  processing: { icon: <Package className="h-4 w-4" />, color: "bg-blue-500/10 text-blue-600 border-blue-500/20", label: "Processing", bgColor: "from-blue-500/20 to-blue-600/20" },
+  shipped: { icon: <Truck className="h-4 w-4" />, color: "bg-purple-500/10 text-purple-600 border-purple-500/20", label: "Shipped", bgColor: "from-purple-500/20 to-purple-600/20" },
+  delivered: { icon: <CheckCircle className="h-4 w-4" />, color: "bg-green-500/10 text-green-600 border-green-500/20", label: "Delivered", bgColor: "from-green-500/20 to-green-600/20" },
+  cancelled: { icon: <XCircle className="h-4 w-4" />, color: "bg-red-500/10 text-red-600 border-red-500/20", label: "Cancelled", bgColor: "from-red-500/20 to-red-600/20" },
 };
 
 export default function Orders() {
@@ -218,66 +218,144 @@ export default function Orders() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Order Details
+            </DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Status Timeline */}
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
-                  {getStatusConfig(selectedOrder.status).icon}
-                  <span className="font-medium">{getStatusConfig(selectedOrder.status).label}</span>
+              {/* Status Timeline with gradient background */}
+              <div className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${getStatusConfig(selectedOrder.status).bgColor} border`}>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm">
+                    {getStatusConfig(selectedOrder.status).icon}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-lg">{getStatusConfig(selectedOrder.status).label}</span>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(selectedOrder.created_at), "MMMM d, yyyy 'at' h:mm a")}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  Order #{selectedOrder.id.slice(0, 8).toUpperCase()}
-                </span>
+                <Badge variant="outline" className="font-mono">
+                  #{selectedOrder.id.slice(0, 8).toUpperCase()}
+                </Badge>
               </div>
 
               {/* Order Items */}
               <div>
-                <h3 className="font-semibold mb-3">Items</h3>
-                <div className="space-y-3">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  Items ({selectedOrder.order_items.length})
+                </h3>
+                <div className="space-y-2">
                   {selectedOrder.order_items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg">
+                    <div key={item.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border/50">
                       <div>
                         <p className="font-medium">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-medium">{formatPrice(item.product_price * item.quantity)}</p>
+                      <p className="font-semibold">{formatPrice(item.product_price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Shipping Address */}
+              {/* Shipping Address with enhanced styling */}
               {selectedOrder.shipping_address && (
                 <div>
-                  <h3 className="font-semibold mb-3">Shipping Address</h3>
-                  <div className="p-3 bg-secondary/50 rounded-lg">
-                    <p className="font-medium">{selectedOrder.shipping_address.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{selectedOrder.shipping_address.address}</p>
-                    <p className="text-sm text-muted-foreground">{selectedOrder.shipping_address.city}</p>
-                    <p className="text-sm text-muted-foreground">{selectedOrder.shipping_address.phone}</p>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    Shipping Details
+                  </h3>
+                  <div className="p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-border/50 space-y-3">
+                    {/* Customer Name */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Customer</p>
+                        <p className="font-medium">{selectedOrder.shipping_address.fullName}</p>
+                      </div>
+                    </div>
+
+                    {/* Address with location icon */}
+                    {selectedOrder.shipping_address.address && (
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10">
+                          <MapPin className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Delivery Address</p>
+                          <p className="font-medium">{selectedOrder.shipping_address.address}</p>
+                          {selectedOrder.shipping_address.city && (
+                            <p className="text-sm text-muted-foreground">{selectedOrder.shipping_address.city}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Phone */}
+                    {selectedOrder.shipping_address.phone && (
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10">
+                          <Phone className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Contact</p>
+                          <p className="font-medium">{selectedOrder.shipping_address.phone}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Method */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10">
+                        {selectedOrder.shipping_address.paymentMethod === "online" ? (
+                          <CreditCard className="h-4 w-4 text-amber-500" />
+                        ) : (
+                          <Banknote className="h-4 w-4 text-amber-500" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Payment Method</p>
+                        <p className="font-medium capitalize">
+                          {selectedOrder.shipping_address.paymentMethod === "online" 
+                            ? "Online Payment" 
+                            : "Cash on Delivery"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Payment Proof */}
+              {/* Payment Proof with enhanced styling */}
               {selectedOrder.payment_proof_url && (
                 <div>
-                  <h3 className="font-semibold mb-3">Payment Proof</h3>
-                  <img
-                    src={selectedOrder.payment_proof_url}
-                    alt="Payment proof"
-                    className="w-full max-w-xs rounded-lg border"
-                  />
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    Payment Proof
+                  </h3>
+                  <div className="p-3 bg-muted/30 rounded-xl border border-border/50">
+                    <img
+                      src={selectedOrder.payment_proof_url}
+                      alt="Payment proof"
+                      className="w-full max-w-xs rounded-lg border shadow-sm mx-auto"
+                    />
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Payment screenshot uploaded
+                    </p>
+                  </div>
                 </div>
               )}
 
               {/* Total */}
-              <div className="flex justify-between items-center pt-4 border-t">
-                <span className="font-semibold">Total</span>
-                <span className="text-xl font-bold">{formatPrice(selectedOrder.total)}</span>
+              <div className="flex justify-between items-center pt-4 border-t border-border/50">
+                <span className="font-semibold text-lg">Total Amount</span>
+                <span className="text-2xl font-bold text-primary">{formatPrice(selectedOrder.total)}</span>
               </div>
             </div>
           )}

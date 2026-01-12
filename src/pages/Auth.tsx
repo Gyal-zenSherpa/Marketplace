@@ -51,6 +51,8 @@ export default function Auth() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockUntil, setLockUntil] = useState<Date | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number;
     feedback: string[];
@@ -123,6 +125,44 @@ export default function Auth() {
       checkPasswordStrength(password);
     }
   }, [password, isLogin, checkPasswordStrength]);
+
+  // Handle forgot password
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const validated = magicLinkSchema.parse({ email });
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        setResetEmailSent(true);
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link.",
+        });
+      }
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        toast({
+          variant: "destructive",
+          title: "Validation error",
+          description: err.errors[0].message,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle magic link submission
   const handleMagicLink = async (e: React.FormEvent) => {
@@ -305,18 +345,92 @@ export default function Auth() {
               <Shield className="h-7 w-7 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
-              {magicLinkSent ? "Check your email" : isLogin ? "Welcome back" : "Create account"}
+              {resetEmailSent 
+                ? "Check your email" 
+                : showForgotPassword 
+                  ? "Reset password" 
+                  : magicLinkSent 
+                    ? "Check your email" 
+                    : isLogin 
+                      ? "Welcome back" 
+                      : "Create account"}
             </h1>
             <p className="text-muted-foreground mt-2">
-              {magicLinkSent 
-                ? "Click the link in your email to sign in"
-                : isLogin
-                  ? "Sign in to your marketplace account"
-                  : "Join our marketplace community"}
+              {resetEmailSent 
+                ? "Click the link in your email to reset your password"
+                : showForgotPassword
+                  ? "Enter your email to receive a reset link"
+                  : magicLinkSent 
+                    ? "Click the link in your email to sign in"
+                    : isLogin
+                      ? "Sign in to your marketplace account"
+                      : "Join our marketplace community"}
             </p>
           </div>
 
-          {magicLinkSent ? (
+          {resetEmailSent ? (
+            <div className="text-center space-y-4">
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <Mail className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                <p className="text-sm text-foreground">
+                  We've sent a password reset link to <strong>{email}</strong>
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Check your inbox and follow the instructions
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setResetEmailSent(false);
+                  setShowForgotPassword(false);
+                  setEmail("");
+                }}
+                className="w-full"
+              >
+                Back to login
+              </Button>
+            </div>
+          ) : showForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    autoComplete="email"
+                    maxLength={255}
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full gradient-hero text-primary-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setEmail("");
+                }}
+                className="w-full text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Back to login
+              </button>
+            </form>
+          ) : magicLinkSent ? (
             <div className="text-center space-y-4">
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <Mail className="h-12 w-12 mx-auto text-primary mb-3" />
@@ -352,7 +466,7 @@ export default function Auth() {
                 </div>
               )}
 
-              {isLogin && (
+              {isLogin && !showForgotPassword && (
                 <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "password" | "magic-link")} className="mb-6">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="password" className="flex items-center gap-2">
@@ -439,7 +553,18 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      {isLogin && (
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-xs text-primary hover:text-primary/80 transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -504,6 +629,7 @@ export default function Auth() {
                     setPassword("");
                     setPasswordStrength({ score: 0, feedback: [] });
                     setAuthMethod("password");
+                    setShowForgotPassword(false);
                   }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >

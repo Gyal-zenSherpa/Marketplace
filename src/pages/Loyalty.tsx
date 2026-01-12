@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LoyaltyProgress } from "@/components/loyalty/LoyaltyWidget";
+import { ReferralSection } from "@/components/referral/ReferralSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,6 @@ import {
   Gift,
   Award,
   History,
-  TrendingUp,
   ShoppingBag,
   Star,
   Users,
@@ -153,9 +153,10 @@ export default function Loyalty() {
             <LoyaltyProgress />
 
             <Tabs defaultValue="earn" className="space-y-4">
-              <TabsList className="grid grid-cols-3 w-full max-w-md">
+              <TabsList className="grid grid-cols-4 w-full max-w-lg">
                 <TabsTrigger value="earn">How to Earn</TabsTrigger>
                 <TabsTrigger value="rewards">Rewards</TabsTrigger>
+                <TabsTrigger value="referrals">Referrals</TabsTrigger>
                 <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
 
@@ -207,6 +208,10 @@ export default function Loyalty() {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="referrals">
+                <ReferralSection />
               </TabsContent>
 
               <TabsContent value="history">

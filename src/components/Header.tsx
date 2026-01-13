@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Scale, Package } from "lucide-react";
+import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Package, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlistContext } from "@/context/WishlistContext";
-import { useCompare } from "@/context/CompareContext";
 import { LoyaltyWidget } from "@/components/loyalty/LoyaltyWidget";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +15,9 @@ export function Header() {
   const { totalItems, setIsCartOpen } = useCart();
   const { user, profile, signOut } = useAuth();
   const { wishlistIds } = useWishlistContext();
-  const { compareItems, setIsCompareOpen } = useCompare();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -47,6 +47,7 @@ export function Header() {
   };
 
   const scrollToProducts = (section?: 'categories' | 'deals') => {
+    setMobileMenuOpen(false);
     // Navigate to home if not already there
     if (window.location.pathname !== '/') {
       navigate('/');
@@ -70,18 +71,87 @@ export function Header() {
     }
   };
 
+  const handleNavigation = (path: string) => {
+    setMobileMenuOpen(false);
+    navigate(path);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+      <div className="container mx-auto flex h-14 md:h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] sm:w-[320px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-hero">
+                    <span className="text-base font-bold text-primary-foreground">M</span>
+                  </div>
+                  <span className="text-lg font-bold">Marketplace</span>
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 mt-6">
+                <button 
+                  onClick={() => scrollToProducts()}
+                  className="w-full text-left px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Browse Products
+                </button>
+                <button 
+                  onClick={() => scrollToProducts('categories')}
+                  className="w-full text-left px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Categories
+                </button>
+                <button 
+                  onClick={() => scrollToProducts('deals')}
+                  className="w-full text-left px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Today's Deals
+                </button>
+                <button
+                  onClick={() => handleNavigation('/seller')}
+                  className="w-full text-left px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Sell on Marketplace
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleNavigation('/admin')}
+                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-primary hover:bg-muted rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin Dashboard
+                  </button>
+                )}
+                <div className="border-t my-2" />
+                <button
+                  onClick={() => handleNavigation('/terms')}
+                  className="w-full text-left px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Terms & Conditions
+                </button>
+                <button
+                  onClick={() => handleNavigation('/refund-policy')}
+                  className="w-full text-left px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                >
+                  Refund Policy
+                </button>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-hero">
-              <span className="text-lg font-bold text-primary-foreground">M</span>
+            <div className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg gradient-hero">
+              <span className="text-base md:text-lg font-bold text-primary-foreground">M</span>
             </div>
-            <span className="text-xl font-bold text-foreground">
+            <span className="text-lg md:text-xl font-bold text-foreground hidden sm:block">
               Marketplace
             </span>
           </Link>
@@ -117,38 +187,23 @@ export function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Loyalty Points Widget */}
-          {user && <LoyaltyWidget />}
-
-          {/* Compare button */}
-          <Button
-            variant="secondary"
-            size="icon"
-            className="relative"
-            onClick={() => setIsCompareOpen(true)}
-          >
-            <Scale className="h-5 w-5" />
-            {compareItems.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {compareItems.length}
-              </span>
-            )}
-          </Button>
+          {/* Loyalty Points Widget - hidden on mobile */}
+          {user && <div className="hidden sm:block"><LoyaltyWidget /></div>}
 
           {/* Wishlist button */}
           <Button
             variant="secondary"
             size="icon"
-            className="relative"
+            className="relative h-9 w-9"
             onClick={() => navigate("/wishlist")}
           >
-            <Heart className="h-5 w-5" />
+            <Heart className="h-4 w-4 md:h-5 md:w-5" />
             {wishlistIds.size > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-destructive text-[10px] md:text-xs font-bold text-destructive-foreground">
                 {wishlistIds.size}
               </span>
             )}
@@ -158,12 +213,12 @@ export function Header() {
           <Button
             variant="secondary"
             size="icon"
-            className="relative"
+            className="relative h-9 w-9"
             onClick={() => setIsCartOpen(true)}
           >
-            <ShoppingCart className="h-5 w-5" />
+            <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
             {totalItems > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-accent text-[10px] md:text-xs font-bold text-accent-foreground">
                 {totalItems}
               </span>
             )}
@@ -172,7 +227,7 @@ export function Header() {
         {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="overflow-hidden">
+                <Button variant="secondary" size="icon" className="overflow-hidden h-9 w-9">
                   {profile?.avatar_url ? (
                     <img 
                       src={profile.avatar_url} 
@@ -180,7 +235,7 @@ export function Header() {
                       className="h-full w-full object-cover rounded-md"
                     />
                   ) : (
-                    <User className="h-5 w-5" />
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -224,7 +279,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="secondary" onClick={() => navigate("/auth")}>
+            <Button variant="secondary" size="sm" className="text-xs md:text-sm px-2 md:px-4" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
           )}

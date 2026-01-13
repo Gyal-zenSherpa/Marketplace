@@ -7,8 +7,6 @@ import { ThemeProvider } from "next-themes";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
-import { CompareProvider } from "@/context/CompareContext";
-import { CompareDrawer } from "@/components/CompareDrawer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ProductDetail from "./pages/ProductDetail";
@@ -21,6 +19,7 @@ import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Loyalty from "./pages/Loyalty";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import RefundPolicy from "./pages/RefundPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,28 +32,26 @@ const App = () => {
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>
-                <CompareProvider>
-                  <Toaster />
-                  <Sonner />
-                  <CompareDrawer />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/product/:id" element={<ProductDetail />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/seller" element={<SellerDashboard />} />
-                      <Route path="/become-seller" element={<SellerApplication />} />
-                      <Route path="/admin" element={<Admin />} />
-                      <Route path="/wishlist" element={<Wishlist />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/orders" element={<Orders />} />
-                      <Route path="/loyalty" element={<Loyalty />} />
-                      <Route path="/terms" element={<TermsAndConditions />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </BrowserRouter>
-                </CompareProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/seller" element={<SellerDashboard />} />
+                    <Route path="/become-seller" element={<SellerApplication />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/wishlist" element={<Wishlist />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/orders" element={<Orders />} />
+                    <Route path="/loyalty" element={<Loyalty />} />
+                    <Route path="/terms" element={<TermsAndConditions />} />
+                    <Route path="/refund-policy" element={<RefundPolicy />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
               </WishlistProvider>
             </CartProvider>
           </AuthProvider>

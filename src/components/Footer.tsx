@@ -82,14 +82,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:marketplaceauthentic01@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="mailto:marketplaceauthentic01@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/report-issue" className="text-muted-foreground hover:text-primary transition-colors">
                   Report an Issue
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

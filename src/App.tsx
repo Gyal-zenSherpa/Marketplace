@@ -20,6 +20,8 @@ import Orders from "./pages/Orders";
 import Loyalty from "./pages/Loyalty";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import Contact from "./pages/Contact";
+import ReportIssue from "./pages/ReportIssue";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,8 @@ const App = () => {
                     <Route path="/loyalty" element={<Loyalty />} />
                     <Route path="/terms" element={<TermsAndConditions />} />
                     <Route path="/refund-policy" element={<RefundPolicy />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/report-issue" element={<ReportIssue />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>

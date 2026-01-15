@@ -1,4 +1,4 @@
-project_id = "hcqsmacnnvesdjyyumaj"
+project_id = "ldcuyyngtdxgijicdgfa"
 
 [functions.generate-description]
 verify_jwt = false
@@ -16,4 +16,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-application-email]
+verify_jwt = false
+
+[functions.send-order-confirmation]
+verify_jwt = false
+
+[functions.send-shipping-update]
+verify_jwt = false
+
+[functions.send-password-reset]
 verify_jwt = false

@@ -187,13 +187,13 @@ export default function Checkout() {
         user_agent: navigator.userAgent,
       });
 
-      // Create order
+      // Create order with email included for shipping notifications
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
           total: grandTotal,
-          shipping_address: { ...validated, paymentMethod },
+          shipping_address: { ...validated, paymentMethod, email: user.email },
           status: "pending",
         })
         .select()
@@ -232,12 +232,41 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
+      // Send order confirmation email
+      try {
+        await supabase.functions.invoke('send-order-confirmation', {
+          body: {
+            orderId: order.id,
+            userEmail: user.email,
+            userName: validated.fullName,
+            orderItems: cartItems.map(item => ({
+              product_name: item.name,
+              quantity: item.quantity,
+              product_price: item.price,
+            })),
+            total: grandTotal,
+            shippingAddress: {
+              fullName: validated.fullName,
+              address: validated.address,
+              city: validated.city,
+              postalCode: validated.zipCode,
+              phone: validated.phone,
+            },
+            paymentMethod,
+          },
+        });
+        console.log('Order confirmation email sent');
+      } catch (emailError) {
+        console.error('Failed to send order confirmation email:', emailError);
+        // Don't fail the order if email fails
+      }
+
       clearCart();
       toast({
         title: "Order placed!",
         description: paymentMethod === "cod" 
-          ? "Thank you! Pay when your order arrives." 
-          : "Thank you! Your payment proof has been submitted.",
+          ? "Thank you! Pay when your order arrives. Check your email for confirmation." 
+          : "Thank you! Your payment proof has been submitted. Check your email for confirmation.",
       });
       navigate("/orders");
     } catch (err) {

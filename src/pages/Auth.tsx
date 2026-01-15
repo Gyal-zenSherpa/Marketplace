@@ -145,6 +145,19 @@ export default function Auth() {
           description: error.message,
         });
       } else {
+        // Send custom password reset email
+        try {
+          await supabase.functions.invoke('send-password-reset', {
+            body: {
+              email: validated.email,
+              resetLink: `${window.location.origin}/auth?reset=true`,
+              userName: undefined,
+            },
+          });
+        } catch (emailError) {
+          console.error('Custom password reset email failed:', emailError);
+        }
+        
         setResetEmailSent(true);
         toast({
           title: "Check your email",

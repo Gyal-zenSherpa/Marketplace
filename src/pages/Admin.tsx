@@ -338,7 +338,7 @@ export default function Admin() {
   };
 
   // Update order status
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, userEmail?: string) => {
     try {
       const { error } = await supabase
         .from("orders")
@@ -346,6 +346,45 @@ export default function Admin() {
         .eq("id", orderId);
 
       if (error) throw error;
+
+      // Find the order to get shipping details
+      const order = orders.find(o => o.id === orderId);
+      
+      // Send shipping update email for status changes
+      if (order && ["processing", "shipped", "delivered"].includes(newStatus) && order.shipping_address) {
+        try {
+          // Get user profile to find their email
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("user_id", order.user_id)
+            .single();
+          
+          // Use provided email or try to get from shipping address
+          const emailToUse = userEmail || (order.shipping_address as any)?.email;
+          
+          if (emailToUse) {
+            await supabase.functions.invoke('send-shipping-update', {
+              body: {
+                orderId: order.id,
+                userEmail: emailToUse,
+                userName: profile?.full_name || order.shipping_address.fullName || 'Valued Customer',
+                status: newStatus as "processing" | "shipped" | "out_for_delivery" | "delivered",
+                trackingNumber: undefined,
+                estimatedDelivery: newStatus === "shipped" ? "3-5 business days" : undefined,
+                shippingAddress: {
+                  fullName: order.shipping_address.fullName || '',
+                  address: order.shipping_address.address || '',
+                  city: order.shipping_address.city || '',
+                },
+              },
+            });
+            console.log('Shipping update email sent for order:', orderId);
+          }
+        } catch (emailErr) {
+          console.error("Failed to send shipping update email:", emailErr);
+        }
+      }
 
       setOrders((prev) =>
         prev.map((order) =>
@@ -355,7 +394,7 @@ export default function Admin() {
 
       toast({
         title: "Order updated",
-        description: `Order status changed to ${newStatus}`,
+        description: `Order status changed to ${newStatus}.`,
       });
     } catch (err) {
       console.error("Error updating order:", err);

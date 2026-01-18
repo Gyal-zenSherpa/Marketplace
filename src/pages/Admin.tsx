@@ -347,42 +347,68 @@ export default function Admin() {
 
       if (error) throw error;
 
-      // Find the order to get shipping details
+      // Find the order to get details
       const order = orders.find(o => o.id === orderId);
       
-      // Send shipping update email for status changes
-      if (order && ["processing", "shipped", "delivered"].includes(newStatus) && order.shipping_address) {
-        try {
-          // Get user profile to find their email
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("user_id", order.user_id)
-            .single();
-          
-          // Use provided email or try to get from shipping address
-          const emailToUse = userEmail || (order.shipping_address as any)?.email;
-          
-          if (emailToUse) {
-            await supabase.functions.invoke('send-shipping-update', {
-              body: {
-                orderId: order.id,
-                userEmail: emailToUse,
-                userName: profile?.full_name || order.shipping_address.fullName || 'Valued Customer',
-                status: newStatus as "processing" | "shipped" | "out_for_delivery" | "delivered",
-                trackingNumber: undefined,
-                estimatedDelivery: newStatus === "shipped" ? "3-5 business days" : undefined,
-                shippingAddress: {
-                  fullName: order.shipping_address.fullName || '',
-                  address: order.shipping_address.address || '',
-                  city: order.shipping_address.city || '',
+      if (order && order.shipping_address) {
+        // Get user profile to find their email
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", order.user_id)
+          .single();
+        
+        // Use provided email or try to get from shipping address
+        const emailToUse = userEmail || (order.shipping_address as any)?.email;
+        
+        if (emailToUse) {
+          // Send order status email for payment approval (processing) or cancellation
+          if (["processing", "cancelled"].includes(newStatus)) {
+            try {
+              await supabase.functions.invoke('send-order-status-email', {
+                body: {
+                  orderId: order.id,
+                  userEmail: emailToUse,
+                  userName: profile?.full_name || order.shipping_address.fullName || 'Valued Customer',
+                  status: newStatus === "processing" ? "approved" : "cancelled",
+                  orderTotal: order.total,
+                  orderItems: order.order_items?.map(item => ({
+                    name: item.product_name,
+                    quantity: item.quantity,
+                    price: item.product_price,
+                  })),
+                  cancellationReason: newStatus === "cancelled" ? "Order was cancelled by admin" : undefined,
                 },
-              },
-            });
-            console.log('Shipping update email sent for order:', orderId);
+              });
+              console.log(`Order ${newStatus} email sent for order:`, orderId);
+            } catch (emailErr) {
+              console.error("Failed to send order status email:", emailErr);
+            }
           }
-        } catch (emailErr) {
-          console.error("Failed to send shipping update email:", emailErr);
+          
+          // Send shipping update email for shipping status changes
+          if (["shipped", "delivered"].includes(newStatus)) {
+            try {
+              await supabase.functions.invoke('send-shipping-update', {
+                body: {
+                  orderId: order.id,
+                  userEmail: emailToUse,
+                  userName: profile?.full_name || order.shipping_address.fullName || 'Valued Customer',
+                  status: newStatus as "shipped" | "delivered",
+                  trackingNumber: undefined,
+                  estimatedDelivery: newStatus === "shipped" ? "3-5 business days" : undefined,
+                  shippingAddress: {
+                    fullName: order.shipping_address.fullName || '',
+                    address: order.shipping_address.address || '',
+                    city: order.shipping_address.city || '',
+                  },
+                },
+              });
+              console.log('Shipping update email sent for order:', orderId);
+            } catch (emailErr) {
+              console.error("Failed to send shipping update email:", emailErr);
+            }
+          }
         }
       }
 

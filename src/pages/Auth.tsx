@@ -312,10 +312,24 @@ export default function Auth() {
             });
           }
         } else {
+          // Send welcome email
+          try {
+            await supabase.functions.invoke('send-welcome-email', {
+              body: {
+                userEmail: validated.email,
+                userName: validated.fullName,
+              },
+            });
+            console.log("Welcome email sent to:", validated.email);
+          } catch (emailErr) {
+            console.error("Failed to send welcome email:", emailErr);
+            // Don't fail signup if email fails
+          }
+          
           toast({
             title: "Account created!",
-            description: "You have successfully signed up.",
-            duration: 2000,
+            description: "You have successfully signed up. Check your email for a welcome message!",
+            duration: 3000,
           });
           navigate("/");
         }

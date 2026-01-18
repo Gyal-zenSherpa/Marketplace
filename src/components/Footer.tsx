@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Mail } from "lucide-react";
+import { Facebook, Instagram, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Footer() {
@@ -25,13 +25,10 @@ export function Footer() {
               Your trusted local marketplace for buying and selling quality products.
             </p>
             <div className="flex gap-2 md:gap-3">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
+              <a href="https://www.facebook.com/swift.gyalzensherpa" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
                 <Facebook className="h-3.5 w-3.5 md:h-4 md:w-4" />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Twitter className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
+              <a href="https://www.instagram.com/its_gyal_zeen/?hl=en" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
                 <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
               </a>
               <a href="mailto:marketplaceauthentic01@gmail.com" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">

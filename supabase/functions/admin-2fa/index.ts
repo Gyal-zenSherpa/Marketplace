@@ -6,6 +6,72 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Encryption helpers using Web Crypto API
+async function getEncryptionKey(): Promise<CryptoKey> {
+  const keyData = Deno.env.get('TOTP_ENCRYPTION_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!keyData) throw new Error('Encryption key not available');
+  
+  // Use first 32 bytes of SHA-256 hash of the key as AES key
+  const encoder = new TextEncoder();
+  const keyHash = await crypto.subtle.digest('SHA-256', encoder.encode(keyData));
+  
+  return crypto.subtle.importKey(
+    'raw',
+    keyHash,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptSecret(plaintext: string): Promise<string> {
+  const key = await getEncryptionKey();
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoder.encode(plaintext)
+  );
+  
+  // Combine IV and ciphertext, encode as base64
+  const combined = new Uint8Array(iv.length + new Uint8Array(encrypted).length);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptSecret(ciphertext: string): Promise<string> {
+  const key = await getEncryptionKey();
+  const combined = new Uint8Array(atob(ciphertext).split('').map(c => c.charCodeAt(0)));
+  
+  const iv = combined.slice(0, 12);
+  const encrypted = combined.slice(12);
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encrypted
+  );
+  
+  return new TextDecoder().decode(decrypted);
+}
+
+// Hash backup codes using SHA-256 (one-way)
+async function hashBackupCode(code: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const normalized = code.toUpperCase().replace('-', '');
+  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(normalized));
+  return btoa(String.fromCharCode(...new Uint8Array(hash)));
+}
+
+async function verifyBackupCode(code: string, hashedCodes: string[]): Promise<number> {
+  const codeHash = await hashBackupCode(code);
+  return hashedCodes.findIndex(h => h === codeHash);
+}
+
 // Simple TOTP implementation
 function generateSecret(length = 20): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -172,13 +238,20 @@ serve(async (req) => {
         const secret = generateSecret();
         const backupCodes = generateBackupCodes();
         
-        // Store encrypted (in production, use proper encryption)
+        // Encrypt the TOTP secret
+        const encryptedSecret = await encryptSecret(secret);
+        
+        // Hash backup codes (one-way) for secure storage
+        const hashedBackupCodes = await Promise.all(
+          backupCodes.map(code => hashBackupCode(code))
+        );
+        
         const { error: insertError } = await supabase
           .from('admin_totp_secrets')
           .upsert({
             user_id: user.id,
-            encrypted_secret: secret, // In production, encrypt this
-            backup_codes: backupCodes,
+            encrypted_secret: encryptedSecret,
+            backup_codes: hashedBackupCodes,
             is_enabled: false,
           });
 
@@ -189,10 +262,11 @@ serve(async (req) => {
 
         const otpauth = `otpauth://totp/Marketplace:${user.email}?secret=${secret}&issuer=Marketplace&algorithm=SHA1&digits=6&period=30`;
 
+        // Return plaintext codes ONLY during setup (user must save them)
         return new Response(JSON.stringify({ 
           secret,
           otpauth,
-          backupCodes
+          backupCodes // User sees these only once
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -219,7 +293,9 @@ serve(async (req) => {
           });
         }
 
-        const isValid = await verifyTOTP(totpData.encrypted_secret, token);
+        // Decrypt the secret for verification
+        const decryptedSecret = await decryptSecret(totpData.encrypted_secret);
+        const isValid = await verifyTOTP(decryptedSecret, token);
         
         if (!isValid) {
           return new Response(JSON.stringify({ error: 'Invalid verification code' }), {
@@ -259,9 +335,10 @@ serve(async (req) => {
           });
         }
 
-        // Check TOTP
+        // Check TOTP code
         if (token.length === 6) {
-          const isValid = await verifyTOTP(totpData.encrypted_secret, token);
+          const decryptedSecret = await decryptSecret(totpData.encrypted_secret);
+          const isValid = await verifyTOTP(decryptedSecret, token);
           if (isValid) {
             return new Response(JSON.stringify({ valid: true }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -269,12 +346,9 @@ serve(async (req) => {
           }
         }
 
-        // Check backup codes
-        const normalizedToken = token.toUpperCase().replace('-', '');
+        // Check backup codes (hashed comparison)
         const backupCodes = totpData.backup_codes || [];
-        const codeIndex = backupCodes.findIndex((c: string) => 
-          c.replace('-', '') === normalizedToken
-        );
+        const codeIndex = await verifyBackupCode(token, backupCodes);
 
         if (codeIndex !== -1) {
           // Remove used backup code
@@ -329,7 +403,8 @@ serve(async (req) => {
           });
         }
 
-        const isValid = await verifyTOTP(totpData.encrypted_secret, token);
+        const decryptedSecret = await decryptSecret(totpData.encrypted_secret);
+        const isValid = await verifyTOTP(decryptedSecret, token);
         if (!isValid) {
           return new Response(JSON.stringify({ error: 'Invalid code' }), {
             status: 400,

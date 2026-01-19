@@ -41,7 +41,7 @@ const initialForm: ProductForm = {
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,8 +55,19 @@ export default function SellerDashboard() {
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
+      return;
     }
-  }, [user, loading, navigate]);
+    
+    // Redirect non-sellers to the seller application page
+    if (!loading && user && profile && !profile.is_seller) {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You must be an approved seller to access the dashboard.",
+      });
+      navigate("/become-seller");
+    }
+  }, [user, profile, loading, navigate]);
 
   const fetchProducts = useCallback(async () => {
     const { data, error } = await supabase

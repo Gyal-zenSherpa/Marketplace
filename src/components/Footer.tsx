@@ -25,15 +25,27 @@ export function Footer() {
               Your trusted local marketplace for buying and selling quality products.
             </p>
             <div className="flex gap-2 md:gap-3">
-              <a href="https://www.facebook.com/swift.gyalzensherpa" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
+              <button 
+                onClick={() => window.open("https://www.facebook.com/swift.gyalzensherpa", "_blank", "noopener,noreferrer")} 
+                className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
+                aria-label="Visit Facebook"
+              >
                 <Facebook className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              </a>
-              <a href="https://www.instagram.com/its_gyal_zeen/?hl=en" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
+              </button>
+              <button 
+                onClick={() => window.open("https://www.instagram.com/its_gyal_zeen/", "_blank", "noopener,noreferrer")} 
+                className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
+                aria-label="Visit Instagram"
+              >
                 <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              </a>
-              <a href="mailto:marketplaceauthentic01@gmail.com" className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors">
+              </button>
+              <button 
+                onClick={() => window.location.href = "mailto:marketplaceauthentic01@gmail.com"} 
+                className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
+                aria-label="Send Email"
+              >
                 <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              </a>
+              </button>
             </div>
           </div>
 

@@ -50,10 +50,12 @@ import {
   Truck,
   Eye,
   CreditCard,
+  BarChart3,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 import { PaymentQRManager } from "@/components/admin/PaymentQRManager";
+import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -159,6 +161,7 @@ export default function Admin() {
   const [orderSearch, setOrderSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Check if current user is admin
   useEffect(() => {
@@ -592,15 +595,23 @@ export default function Admin() {
     );
   });
 
-  // Filter orders based on search
+  // Filter orders based on search and status filter
   const filteredOrders = orders.filter((order) => {
     const search = orderSearch.toLowerCase();
-    return (
+    const matchesSearch = 
       order.id.toLowerCase().includes(search) ||
       order.status.toLowerCase().includes(search) ||
-      order.shipping_address?.fullName?.toLowerCase().includes(search)
-    );
+      order.shipping_address?.fullName?.toLowerCase().includes(search);
+    
+    const matchesStatus = statusFilter ? order.status === statusFilter : true;
+    
+    return matchesSearch && matchesStatus;
   });
+
+  // Handle status filter from analytics
+  const handleStatusFilter = (status: string | null) => {
+    setStatusFilter(status);
+  };
 
   const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
 
@@ -694,8 +705,12 @@ export default function Admin() {
           </Card>
         </div>
 
-        <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 max-w-4xl">
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 max-w-5xl">
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <Store className="h-4 w-4" />
               Applications
@@ -729,6 +744,11 @@ export default function Admin() {
               Security
             </TabsTrigger>
           </TabsList>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <OrderAnalytics orders={orders} onStatusFilter={handleStatusFilter} />
+          </TabsContent>
 
           {/* Seller Applications Tab */}
           <TabsContent value="applications">
@@ -841,6 +861,17 @@ export default function Admin() {
                     <CardDescription>View and manage customer orders</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    {statusFilter && (
+                      <Badge variant="secondary" className="gap-1">
+                        Filtered: {statusFilter}
+                        <button
+                          onClick={() => setStatusFilter(null)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input

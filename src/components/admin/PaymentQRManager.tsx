@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Upload, X, ImageIcon, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, AlertTriangle } from "lucide-react";
 
 interface PaymentQR {
   id: string;
@@ -15,6 +15,32 @@ interface PaymentQR {
   display_order: number;
   is_active: boolean;
 }
+
+// URL validation helper
+const isValidUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+// Check if URL is a local path (invalid)
+const isLocalPath = (url: string | null): boolean => {
+  if (!url) return false;
+  // Common patterns for local paths
+  return (
+    url.startsWith('.') ||
+    url.startsWith('/') ||
+    url.startsWith('\\') ||
+    url.includes(':\\') ||
+    url.match(/^[A-Za-z]:/) !== null ||
+    !url.includes('://') ||
+    url.startsWith('file://')
+  );
+};
 
 export function PaymentQRManager() {
   const [qrCodes, setQrCodes] = useState<PaymentQR[]>([]);
@@ -106,19 +132,25 @@ export function PaymentQRManager() {
 
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `payment-qr/${qrId}-${Date.now()}.${fileExt}`;
+      const fileName = `${qrId}-${Date.now()}.${fileExt}`;
 
+      // Upload to the dedicated payment-qr-codes bucket
       const { error: uploadError } = await supabase.storage
-        .from("product-images")
+        .from("payment-qr-codes")
         .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
+        .from("payment-qr-codes")
         .getPublicUrl(fileName);
 
-      // Update QR code record
+      // Validate that we got a proper URL
+      if (!isValidUrl(publicUrl)) {
+        throw new Error("Failed to generate valid public URL");
+      }
+
+      // Update QR code record with validated URL
       const { error: updateError } = await supabase
         .from("payment_qr_codes")
         .update({ image_url: publicUrl })
@@ -174,6 +206,32 @@ export function PaymentQRManager() {
     }
   };
 
+  const fixInvalidUrl = async (qrId: string) => {
+    try {
+      const { error } = await supabase
+        .from("payment_qr_codes")
+        .update({ image_url: null })
+        .eq("id", qrId);
+
+      if (error) throw error;
+
+      setQrCodes((prev) =>
+        prev.map((qr) => (qr.id === qrId ? { ...qr, image_url: null } : qr))
+      );
+
+      toast({
+        title: "Invalid URL removed",
+        description: "Please upload a new image.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fix invalid URL.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const updateQRName = async (qrId: string, name: string) => {
     const { error } = await supabase
       .from("payment_qr_codes")
@@ -205,64 +263,88 @@ export function PaymentQRManager() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {qrCodes.map((qr) => (
-            <div key={qr.id} className="space-y-3">
-              <Label>{qr.type.charAt(0).toUpperCase() + qr.type.slice(1)} Payment</Label>
-              <Input
-                value={qr.name}
-                onChange={(e) => updateQRName(qr.id, e.target.value)}
-                placeholder="Display name"
-                className="mb-2"
-              />
-              <div
-                className="relative aspect-square rounded-lg border-2 border-dashed border-border bg-muted/50 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors"
-                onClick={() => fileInputRefs.current[qr.id]?.click()}
-              >
-                {uploading === qr.id ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground mt-2">Uploading...</span>
-                  </div>
-                ) : qr.image_url ? (
-                  <>
-                    <img
-                      src={qr.image_url}
-                      alt={qr.name}
-                      className="w-full h-full object-contain"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage(qr.id);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center text-muted-foreground">
-                    <Upload className="h-10 w-10 mb-2" />
-                    <span className="text-sm">Click to upload</span>
-                    <span className="text-xs mt-1">PNG, JPG up to 5MB</span>
-                  </div>
-                )}
+          {qrCodes.map((qr) => {
+            const hasInvalidUrl = qr.image_url && (isLocalPath(qr.image_url) || !isValidUrl(qr.image_url));
+            
+            return (
+              <div key={qr.id} className="space-y-3">
+                <Label>{qr.type.charAt(0).toUpperCase() + qr.type.slice(1)} Payment</Label>
+                <Input
+                  value={qr.name}
+                  onChange={(e) => updateQRName(qr.id, e.target.value)}
+                  placeholder="Display name"
+                  className="mb-2"
+                />
+                <div
+                  className={`relative aspect-square rounded-lg border-2 border-dashed bg-muted/50 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors ${
+                    hasInvalidUrl ? 'border-destructive' : 'border-border'
+                  }`}
+                  onClick={() => !hasInvalidUrl && fileInputRefs.current[qr.id]?.click()}
+                >
+                  {uploading === qr.id ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground mt-2">Uploading...</span>
+                    </div>
+                  ) : hasInvalidUrl ? (
+                    <div className="flex flex-col items-center text-center p-4">
+                      <AlertTriangle className="h-10 w-10 text-destructive mb-2" />
+                      <span className="text-sm font-medium text-destructive">Invalid File Path</span>
+                      <span className="text-xs text-muted-foreground mt-1 mb-3">
+                        Local file paths are not supported
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fixInvalidUrl(qr.id);
+                        }}
+                      >
+                        Fix & Upload New Image
+                      </Button>
+                    </div>
+                  ) : qr.image_url && isValidUrl(qr.image_url) ? (
+                    <>
+                      <img
+                        src={qr.image_url}
+                        alt={qr.name}
+                        className="w-full h-full object-contain"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage(qr.id);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <Upload className="h-10 w-10 mb-2" />
+                      <span className="text-sm">Click to upload</span>
+                      <span className="text-xs mt-1">PNG, JPG up to 5MB</span>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={(el) => (fileInputRefs.current[qr.id] = el)}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(qr.id, file);
+                  }}
+                />
               </div>
-              <input
-                ref={(el) => (fileInputRefs.current[qr.id] = el)}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageUpload(qr.id, file);
-                }}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

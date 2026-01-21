@@ -88,7 +88,15 @@ interface SellerApplication {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  document_type: string | null;
+  document_image_url: string | null;
 }
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  citizenship: "Citizenship Certificate",
+  passport: "Passport",
+  driving_license: "Driving License",
+};
 
 interface OrderItem {
   id: string;
@@ -1198,7 +1206,7 @@ export default function Admin() {
 
         {/* Review Application Dialog */}
         <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {reviewAction === "approved" ? "Approve" : "Reject"} Application
@@ -1214,7 +1222,47 @@ export default function Admin() {
                 <div className="bg-muted rounded-lg p-4 space-y-2">
                   <p className="font-medium">{selectedApplication.business_name}</p>
                   <p className="text-sm text-muted-foreground">{selectedApplication.business_description}</p>
+                  {selectedApplication.phone_number && (
+                    <p className="text-sm text-muted-foreground">Phone: {selectedApplication.phone_number}</p>
+                  )}
                 </div>
+
+                {/* Government ID Document Section */}
+                {selectedApplication.document_type && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Government ID Verification</Label>
+                    <div className="bg-muted/50 rounded-lg p-4 border">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="outline" className="text-xs">
+                          {DOCUMENT_TYPE_LABELS[selectedApplication.document_type] || selectedApplication.document_type}
+                        </Badge>
+                      </div>
+                      {selectedApplication.document_image_url ? (
+                        <div className="relative">
+                          <img
+                            src={selectedApplication.document_image_url}
+                            alt="Government ID Document"
+                            className="w-full max-h-64 object-contain rounded-md border bg-background"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => window.open(selectedApplication.document_image_url!, '_blank')}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Full Size
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-32 bg-muted rounded-md">
+                          <p className="text-sm text-muted-foreground">No document image uploaded</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="admin_notes">
                     {reviewAction === "rejected" ? "Rejection Reason *" : "Notes (optional)"}

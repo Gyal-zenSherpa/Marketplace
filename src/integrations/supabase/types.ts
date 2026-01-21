@@ -736,6 +736,8 @@ export type Database = {
           business_description: string
           business_name: string
           created_at: string
+          document_image_url: string | null
+          document_type: string | null
           id: string
           phone_number: string | null
           reviewed_at: string | null
@@ -749,6 +751,8 @@ export type Database = {
           business_description: string
           business_name: string
           created_at?: string
+          document_image_url?: string | null
+          document_type?: string | null
           id?: string
           phone_number?: string | null
           reviewed_at?: string | null
@@ -762,6 +766,8 @@ export type Database = {
           business_description?: string
           business_name?: string
           created_at?: string
+          document_image_url?: string | null
+          document_type?: string | null
           id?: string
           phone_number?: string | null
           reviewed_at?: string | null

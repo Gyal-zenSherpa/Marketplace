@@ -10,8 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Clock, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Store, Clock, CheckCircle, XCircle, ArrowLeft, Upload, FileText, Loader2 } from "lucide-react";
 
 interface SellerApplication {
   id: string;
@@ -21,7 +28,15 @@ interface SellerApplication {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  document_type: string | null;
+  document_image_url: string | null;
 }
+
+const DOCUMENT_TYPES = [
+  { value: "citizenship", label: "Citizenship Certificate" },
+  { value: "passport", label: "Passport" },
+  { value: "driving_license", label: "Driving License" },
+];
 
 const SellerApplication = () => {
   const { user } = useAuth();
@@ -29,8 +44,12 @@ const SellerApplication = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [existingApplication, setExistingApplication] = useState<SellerApplication | null>(null);
   const [isSeller, setIsSeller] = useState(false);
+  const [documentType, setDocumentType] = useState<string>("");
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     business_name: "",
     business_description: "",
@@ -79,17 +98,105 @@ const SellerApplication = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDocumentFile(file);
+    setDocumentPreview(URL.createObjectURL(file));
+  };
+
+  const uploadDocument = async (): Promise<string | null> => {
+    if (!documentFile || !user) return null;
+
+    setUploading(true);
+    try {
+      const fileExt = documentFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('seller-documents')
+        .upload(fileName, documentFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('seller-documents')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload document",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    // Validate document type and file
+    if (!documentType) {
+      toast({
+        title: "Document type required",
+        description: "Please select a government ID type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!documentFile) {
+      toast({
+        title: "Document image required",
+        description: "Please upload an image of your government ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Upload document first
+      const documentUrl = await uploadDocument();
+      if (!documentUrl) {
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from("seller_applications").insert({
         user_id: user.id,
         business_name: formData.business_name,
         business_description: formData.business_description,
         phone_number: formData.phone_number || null,
+        document_type: documentType,
+        document_image_url: documentUrl,
       });
 
       if (error) throw error;
@@ -266,8 +373,83 @@ const SellerApplication = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? "Submitting..." : "Submit Application"}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="space-y-2">
+                    <Label htmlFor="document_type">Government ID Type *</Label>
+                    <Select value={documentType} onValueChange={setDocumentType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DOCUMENT_TYPES.map((doc) => (
+                          <SelectItem key={doc.value} value={doc.value}>
+                            {doc.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Please provide a government-issued ID for verification
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="document_image">Upload Document Image *</Label>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      {documentPreview ? (
+                        <div className="space-y-3">
+                          <img
+                            src={documentPreview}
+                            alt="Document preview"
+                            className="w-full max-h-48 object-contain rounded-md"
+                          />
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              {documentFile?.name}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setDocumentFile(null);
+                                setDocumentPreview(null);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label htmlFor="document_image" className="flex flex-col items-center justify-center cursor-pointer py-4">
+                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                          <span className="text-sm font-medium">Click to upload document</span>
+                          <span className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG up to 5MB
+                          </span>
+                        </label>
+                      )}
+                      <Input
+                        id="document_image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={submitting || uploading}>
+                  {submitting || uploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {uploading ? "Uploading document..." : "Submitting..."}
+                    </>
+                  ) : (
+                    "Submit Application"
+                  )}
                 </Button>
               </form>
             )}

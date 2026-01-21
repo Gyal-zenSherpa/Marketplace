@@ -9,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AdminLogin from "./pages/AdminLogin";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import SellerDashboard from "./pages/SellerDashboard";
@@ -41,6 +42,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/admin-login" element={<AdminLogin />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/seller" element={<SellerDashboard />} />

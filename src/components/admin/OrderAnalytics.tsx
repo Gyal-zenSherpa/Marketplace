@@ -16,7 +16,6 @@ import {
   Cell,
   LineChart,
   Line,
-  ResponsiveContainer,
   Legend,
 } from "recharts";
 import {
@@ -295,28 +294,26 @@ export function OrderAnalytics({ orders, onStatusFilter }: OrderAnalyticsProps) 
             <CardDescription>Click to filter orders</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                    onClick={(data) => onStatusFilter(data.status)}
-                    className="cursor-pointer"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={70}
+                  paddingAngle={2}
+                  dataKey="value"
+                  onClick={(data) => onStatusFilter(data.status)}
+                  className="cursor-pointer"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex flex-wrap gap-2 mt-4 justify-center">
               {statusData.map((item) => (
                 <Badge
@@ -434,26 +431,24 @@ export function OrderAnalytics({ orders, onStatusFilter }: OrderAnalyticsProps) 
             <CardDescription>Online vs Cash on Delivery</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={paymentData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {paymentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
+              <PieChart>
+                <Pie
+                  data={paymentData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {paymentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex justify-center gap-4 mt-4">
               {paymentData.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">

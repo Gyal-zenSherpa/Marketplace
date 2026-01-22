@@ -9,6 +9,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper to decode JWT and extract payload
+function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 interface PasswordResetRequest {
   email: string;
   resetLink: string;
@@ -23,6 +35,38 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error("Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const jwtToken = authHeader.replace('Bearer ', '');
+    const jwtPayload = decodeJwt(jwtToken);
+    
+    if (!jwtPayload || !jwtPayload.sub) {
+      console.error("Invalid token payload");
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if token is expired
+    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
+      console.error("Token expired");
+      return new Response(
+        JSON.stringify({ error: 'Token expired' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Authenticated user: ${jwtPayload.sub}`);
+
     const { email, resetLink, userName }: PasswordResetRequest = await req.json();
 
     console.log(`Sending password reset email to ${email}`);

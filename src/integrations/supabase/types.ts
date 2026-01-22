@@ -913,6 +913,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_data: { Args: never; Returns: undefined }
       cleanup_old_security_data: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       get_user_roles: {

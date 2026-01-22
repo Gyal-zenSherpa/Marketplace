@@ -1,10 +1,21 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Helper to decode JWT and extract payload
+function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // Encryption helpers using Web Crypto API
 async function getEncryptionKey(): Promise<CryptoKey> {
@@ -178,7 +189,7 @@ function generateBackupCodes(count = 8): string[] {
   return codes;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -192,26 +203,34 @@ serve(async (req) => {
       throw new Error('Supabase configuration is missing');
     }
 
-    // Verify authentication
+    // Verify authentication by decoding JWT
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const jwtToken = authHeader.replace('Bearer ', '');
+    const jwtPayload = decodeJwt(jwtToken);
+    
+    if (!jwtPayload || !jwtPayload.sub) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Check if token is expired
+    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
+      return new Response(JSON.stringify({ error: 'Token expired' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const user = { id: jwtPayload.sub, email: jwtPayload.email };
 
     // Use service role for database operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

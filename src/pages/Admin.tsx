@@ -164,6 +164,7 @@ export default function Admin() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
+  const [signedDocumentUrl, setSignedDocumentUrl] = useState<string | null>(null);
 
   // Orders state
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -172,6 +173,7 @@ export default function Admin() {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [signedPaymentProofUrl, setSignedPaymentProofUrl] = useState<string | null>(null);
 
   // Check if current user is admin
   useEffect(() => {
@@ -221,6 +223,81 @@ export default function Admin() {
 
     checkAdminAccess();
   }, [user, loading, navigate]);
+
+  // Helper function to extract storage path from URL
+  const extractStoragePath = (url: string, bucket: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      // Pattern: /storage/v1/object/public/{bucket}/{path}
+      const pathMatch = urlObj.pathname.match(new RegExp(`/storage/v1/object/public/${bucket}/(.+)`));
+      if (pathMatch) {
+        return decodeURIComponent(pathMatch[1]);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Fetch signed URL for payment proof when order is selected
+  useEffect(() => {
+    const fetchSignedPaymentProofUrl = async () => {
+      if (!selectedOrder?.payment_proof_url || !orderDetailOpen) {
+        setSignedPaymentProofUrl(null);
+        return;
+      }
+
+      const path = extractStoragePath(selectedOrder.payment_proof_url, 'payment-proofs');
+      if (!path) {
+        setSignedPaymentProofUrl(null);
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('payment-proofs')
+        .createSignedUrl(path, 3600); // 1 hour expiry
+
+      if (error) {
+        console.error('Failed to get signed URL for payment proof:', error);
+        setSignedPaymentProofUrl(null);
+        return;
+      }
+
+      setSignedPaymentProofUrl(data.signedUrl);
+    };
+
+    fetchSignedPaymentProofUrl();
+  }, [selectedOrder, orderDetailOpen]);
+
+  // Fetch signed URL for seller document when application is selected
+  useEffect(() => {
+    const fetchSignedDocumentUrl = async () => {
+      if (!selectedApplication?.document_image_url || !reviewDialogOpen) {
+        setSignedDocumentUrl(null);
+        return;
+      }
+
+      const path = extractStoragePath(selectedApplication.document_image_url, 'seller-documents');
+      if (!path) {
+        setSignedDocumentUrl(null);
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('seller-documents')
+        .createSignedUrl(path, 3600); // 1 hour expiry
+
+      if (error) {
+        console.error('Failed to get signed URL for seller document:', error);
+        setSignedDocumentUrl(null);
+        return;
+      }
+
+      setSignedDocumentUrl(data.signedUrl);
+    };
+
+    fetchSignedDocumentUrl();
+  }, [selectedApplication, reviewDialogOpen]);
 
   // Fetch users with roles
   const fetchUsers = async () => {
@@ -1238,22 +1315,28 @@ export default function Admin() {
                         </Badge>
                       </div>
                       {selectedApplication.document_image_url ? (
-                        <div className="relative">
-                          <img
-                            src={selectedApplication.document_image_url}
-                            alt="Government ID Document"
-                            className="w-full max-h-64 object-contain rounded-md border bg-background"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => window.open(selectedApplication.document_image_url!, '_blank')}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Full Size
-                          </Button>
-                        </div>
+                        signedDocumentUrl ? (
+                          <div className="relative">
+                            <img
+                              src={signedDocumentUrl}
+                              alt="Government ID Document"
+                              className="w-full max-h-64 object-contain rounded-md border bg-background"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => window.open(signedDocumentUrl!, '_blank')}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Full Size
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-32 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground">Loading document...</p>
+                          </div>
+                        )
                       ) : (
                         <div className="flex items-center justify-center h-32 bg-muted rounded-md">
                           <p className="text-sm text-muted-foreground">No document image uploaded</p>
@@ -1376,13 +1459,19 @@ export default function Admin() {
                 {selectedOrder.payment_proof_url && (
                   <div>
                     <h4 className="font-semibold mb-2">Payment Proof</h4>
-                    <a href={selectedOrder.payment_proof_url} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={selectedOrder.payment_proof_url}
-                        alt="Payment proof"
-                        className="w-full max-w-xs rounded-lg border hover:opacity-90 transition-opacity cursor-pointer"
-                      />
-                    </a>
+                    {signedPaymentProofUrl ? (
+                      <a href={signedPaymentProofUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={signedPaymentProofUrl}
+                          alt="Payment proof"
+                          className="w-full max-w-xs rounded-lg border hover:opacity-90 transition-opacity cursor-pointer"
+                        />
+                      </a>
+                    ) : (
+                      <div className="flex items-center justify-center h-32 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">Loading payment proof...</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

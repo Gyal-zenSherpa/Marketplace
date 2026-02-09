@@ -427,7 +427,7 @@ export default function Auth() {
                   <Input
                     id="reset-email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder=""
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -517,7 +517,7 @@ export default function Auth() {
                       <Input
                         id="magic-email"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder=""
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -550,7 +550,7 @@ export default function Auth() {
                         <Input
                           id="fullName"
                           type="text"
-                          placeholder="John Doe"
+                          placeholder=""
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           className="pl-10"
@@ -568,7 +568,7 @@ export default function Auth() {
                       <Input
                         id="email"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder=""
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -597,7 +597,7 @@ export default function Auth() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder=""
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10"

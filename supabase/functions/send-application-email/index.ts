@@ -4,6 +4,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// HTML escape helper to prevent injection
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -97,16 +108,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const isApproved = status === "approved";
     const subject = isApproved
-      ? `Congratulations! Your Seller Application for "${businessName}" is Approved`
-      : `Update on Your Seller Application for "${businessName}"`;
+      ? `Congratulations! Your Seller Application for "${escapeHtml(businessName)}" is Approved`
+      : `Update on Your Seller Application for "${escapeHtml(businessName)}"`;
 
     const html = isApproved
       ? `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #16a34a;">🎉 Congratulations!</h1>
-          <p>Your seller application for <strong>${businessName}</strong> has been <span style="color: #16a34a; font-weight: bold;">approved</span>!</p>
+          <p>Your seller application for <strong>${escapeHtml(businessName)}</strong> has been <span style="color: #16a34a; font-weight: bold;">approved</span>!</p>
           <p>You can now start listing your products on our marketplace.</p>
-          ${adminNotes ? `<p><strong>Admin Notes:</strong> ${adminNotes}</p>` : ""}
+          ${adminNotes ? `<p><strong>Admin Notes:</strong> ${escapeHtml(adminNotes)}</p>` : ""}
           <div style="margin-top: 30px; padding: 20px; background-color: #f0fdf4; border-radius: 8px;">
             <h3 style="margin-top: 0;">Next Steps:</h3>
             <ol>
@@ -121,8 +132,8 @@ const handler = async (req: Request): Promise<Response> => {
       : `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #dc2626;">Application Update</h1>
-          <p>We regret to inform you that your seller application for <strong>${businessName}</strong> was not approved at this time.</p>
-          ${adminNotes ? `<p><strong>Reason:</strong> ${adminNotes}</p>` : ""}
+          <p>We regret to inform you that your seller application for <strong>${escapeHtml(businessName)}</strong> was not approved at this time.</p>
+          ${adminNotes ? `<p><strong>Reason:</strong> ${escapeHtml(adminNotes)}</p>` : ""}
           <div style="margin-top: 30px; padding: 20px; background-color: #fef2f2; border-radius: 8px;">
             <h3 style="margin-top: 0;">What's Next?</h3>
             <p>You can reapply after addressing the feedback provided. If you have questions, please contact our support team.</p>

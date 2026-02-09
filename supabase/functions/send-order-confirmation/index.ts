@@ -3,6 +3,17 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// HTML escape helper to prevent injection
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -99,10 +110,10 @@ const handler = async (req: Request): Promise<Response> => {
       .map(
         (item) => `
         <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.product_name}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">Rs. ${item.product_price.toLocaleString()}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">Rs. ${(item.quantity * item.product_price).toLocaleString()}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.product_name)}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${Number(item.quantity)}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">Rs. ${Number(item.product_price).toLocaleString()}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">Rs. ${(Number(item.quantity) * Number(item.product_price)).toLocaleString()}</td>
         </tr>
       `
       )
@@ -120,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 Order Confirmed!</h1>
-            <p style="color: #fecaca; margin: 10px 0 0 0;">Thank you for your purchase, ${userName || 'Valued Customer'}!</p>
+            <p style="color: #fecaca; margin: 10px 0 0 0;">Thank you for your purchase, ${escapeHtml(userName || 'Valued Customer')}!</p>
           </div>
 
           <!-- Order Details -->
@@ -156,10 +167,10 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="flex: 1; min-width: 200px; background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
                 <h3 style="color: #374151; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase;">Shipping Address</h3>
                 <p style="margin: 0; color: #1f2937; line-height: 1.6;">
-                  ${shippingAddress.fullName}<br>
-                  ${shippingAddress.address}<br>
-                  ${shippingAddress.city}, ${shippingAddress.postalCode}<br>
-                  📞 ${shippingAddress.phone}
+                  ${escapeHtml(shippingAddress.fullName)}<br>
+                  ${escapeHtml(shippingAddress.address)}<br>
+                  ${escapeHtml(shippingAddress.city)}, ${escapeHtml(shippingAddress.postalCode)}<br>
+                  📞 ${escapeHtml(shippingAddress.phone)}
                 </p>
               </div>
               <div style="flex: 1; min-width: 200px; background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 15px;">

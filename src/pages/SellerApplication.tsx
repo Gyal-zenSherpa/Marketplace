@@ -23,13 +23,10 @@ import { Store, Clock, CheckCircle, XCircle, ArrowLeft, Upload, FileText, Loader
 interface SellerApplication {
   id: string;
   business_name: string;
-  business_description: string;
-  phone_number: string | null;
   status: string;
   admin_notes: string | null;
   created_at: string;
-  document_type: string | null;
-  document_image_url: string | null;
+  updated_at: string;
 }
 
 const DOCUMENT_TYPES = [
@@ -81,12 +78,11 @@ const SellerApplication = () => {
         return;
       }
 
-      // Check for existing application
-      const { data: application } = await supabase
-        .from("seller_applications")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Check for existing application via secure RPC (limited fields only)
+      const { data: applications } = await supabase
+        .rpc("get_my_seller_application");
+
+      const application = applications?.[0] ?? null;
 
       if (application) {
         setExistingApplication(application);
@@ -300,16 +296,7 @@ const SellerApplication = () => {
                     <Label className="text-muted-foreground">Business Name</Label>
                     <p className="font-medium">{existingApplication.business_name}</p>
                   </div>
-                  <div>
-                    <Label className="text-muted-foreground">Description</Label>
-                    <p>{existingApplication.business_description}</p>
-                  </div>
-                  {existingApplication.phone_number && (
-                    <div>
-                      <Label className="text-muted-foreground">Phone</Label>
-                      <p>{existingApplication.phone_number}</p>
-                    </div>
-                  )}
+                  
                   <div>
                     <Label className="text-muted-foreground">Submitted</Label>
                     <p>{new Date(existingApplication.created_at).toLocaleDateString()}</p>

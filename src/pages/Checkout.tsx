@@ -327,7 +327,7 @@ export default function Checkout() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  placeholder="Ram Bahadur"
+                  placeholder=""
                   required
                 />
               </div>
@@ -339,7 +339,7 @@ export default function Checkout() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Thamel, Kathmandu"
+                  placeholder=""
                   required
                 />
               </div>
@@ -352,7 +352,7 @@ export default function Checkout() {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="Kathmandu"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -363,7 +363,7 @@ export default function Checkout() {
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    placeholder="Bagmati"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -377,7 +377,7 @@ export default function Checkout() {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
-                    placeholder="44600"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -389,7 +389,7 @@ export default function Checkout() {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+977 9800000000"
+                    placeholder=""
                     required
                   />
                 </div>

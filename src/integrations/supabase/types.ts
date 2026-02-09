@@ -916,6 +916,17 @@ export type Database = {
       cleanup_expired_data: { Args: never; Returns: undefined }
       cleanup_old_security_data: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      get_my_seller_application: {
+        Args: never
+        Returns: {
+          admin_notes: string
+          business_name: string
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

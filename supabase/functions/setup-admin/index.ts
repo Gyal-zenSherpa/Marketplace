@@ -14,8 +14,9 @@ Deno.serve(async (req) => {
   try {
     const { email, password, setupKey } = await req.json();
     
-    // Simple setup key validation to prevent unauthorized access
-    if (setupKey !== 'SETUP_ADMIN_7879') {
+    // Validate setup key from secure environment secret
+    const ADMIN_SETUP_SECRET = Deno.env.get('ADMIN_SETUP_SECRET');
+    if (!ADMIN_SETUP_SECRET || setupKey !== ADMIN_SETUP_SECRET) {
       return new Response(
         JSON.stringify({ error: 'Invalid setup key' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

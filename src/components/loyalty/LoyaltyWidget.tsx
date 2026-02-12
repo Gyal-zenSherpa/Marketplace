@@ -74,15 +74,7 @@ export function LoyaltyWidget() {
 
       if (newLoyalty) {
         setLoyalty(newLoyalty);
-
-        // Log bonus transaction
-        await supabase.from("points_transactions").insert({
-          user_id: user.id,
-          points: 100,
-          type: "bonus",
-          source: "signup",
-          description: "Welcome bonus points",
-        });
+        // Points transaction is logged server-side via RLS (service role only)
       }
     }
 

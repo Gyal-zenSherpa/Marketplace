@@ -17,6 +17,59 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
+function PaymentProofDisplay({ paymentProofPath }: { paymentProofPath: string }) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUrl = async () => {
+      // Extract path from full URL if needed
+      let path = paymentProofPath;
+      const marker = '/object/public/payment-proofs/';
+      const idx = path.indexOf(marker);
+      if (idx !== -1) {
+        path = path.substring(idx + marker.length);
+      }
+      const signedMarker = '/object/sign/payment-proofs/';
+      const signedIdx = path.indexOf(signedMarker);
+      if (signedIdx !== -1) {
+        path = path.substring(signedIdx + signedMarker.length).split('?')[0];
+      }
+
+      const { data, error } = await supabase.storage
+        .from('payment-proofs')
+        .createSignedUrl(path, 3600);
+
+      if (!error && data) {
+        setSignedUrl(data.signedUrl);
+      }
+    };
+    fetchUrl();
+  }, [paymentProofPath]);
+
+  return (
+    <div>
+      <h3 className="font-semibold mb-3 flex items-center gap-2">
+        <CreditCard className="h-4 w-4 text-muted-foreground" />
+        Payment Proof
+      </h3>
+      <div className="p-3 bg-muted/30 rounded-xl border border-border/50">
+        {signedUrl ? (
+          <img
+            src={signedUrl}
+            alt="Payment proof"
+            className="w-full max-w-xs rounded-lg border shadow-sm mx-auto"
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">Loading payment proof...</p>
+        )}
+        <p className="text-xs text-center text-muted-foreground mt-2">
+          Payment screenshot uploaded
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface OrderItem {
   id: string;
   product_name: string;
@@ -334,22 +387,7 @@ export default function Orders() {
 
               {/* Payment Proof with enhanced styling */}
               {selectedOrder.payment_proof_url && (
-                <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    Payment Proof
-                  </h3>
-                  <div className="p-3 bg-muted/30 rounded-xl border border-border/50">
-                    <img
-                      src={selectedOrder.payment_proof_url}
-                      alt="Payment proof"
-                      className="w-full max-w-xs rounded-lg border shadow-sm mx-auto"
-                    />
-                    <p className="text-xs text-center text-muted-foreground mt-2">
-                      Payment screenshot uploaded
-                    </p>
-                  </div>
-                </div>
+                <PaymentProofDisplay paymentProofPath={selectedOrder.payment_proof_url} />
               )}
 
               {/* Total */}

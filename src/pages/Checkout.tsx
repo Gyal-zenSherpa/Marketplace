@@ -141,11 +141,8 @@ export default function Checkout() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("payment-proofs")
-        .getPublicUrl(fileName);
-
-      return publicUrl;
+      // Store the file path (not public URL) since bucket is private
+      return fileName;
     } catch (error) {
       console.error("Payment proof upload error:", error);
       return null;

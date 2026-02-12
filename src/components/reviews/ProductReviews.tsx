@@ -206,19 +206,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         });
       }
 
-      // Award loyalty points for review
-      await supabase.from("points_transactions").insert({
-        user_id: user.id,
-        points: 25,
-        type: "bonus",
-        source: "review",
-        reference_id: review.id,
-        description: "Points earned for leaving a review",
-      });
+      // Points are awarded server-side only (RLS blocks client inserts)
 
       toast({
         title: "Review submitted!",
-        description: "Thank you for your feedback. You earned 25 loyalty points!",
+        description: "Thank you for your feedback.",
       });
 
       setShowForm(false);

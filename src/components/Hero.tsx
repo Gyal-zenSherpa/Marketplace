@@ -1,4 +1,5 @@
 import { ArrowRight, Sparkles } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShoppingCart, Menu, User, LogOut, Store, Shield, Heart, Package, BarChart3 } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -90,9 +91,7 @@ export function Header() {
             <SheetContent side="left" className="w-[280px] sm:w-[320px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-hero">
-                    <span className="text-base font-bold text-primary-foreground">M</span>
-                  </div>
+                  <img src={logoImg} alt="Marketplace" className="h-8 w-8 rounded-lg" />
                   <span className="text-lg font-bold">Marketplace</span>
                 </SheetTitle>
               </SheetHeader>
@@ -148,9 +147,7 @@ export function Header() {
           </Sheet>
 
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg gradient-hero">
-              <span className="text-base md:text-lg font-bold text-primary-foreground">M</span>
-            </div>
+            <img src={logoImg} alt="Marketplace" className="h-8 w-8 md:h-9 md:w-9 rounded-lg" />
             <span className="text-lg md:text-xl font-bold text-foreground hidden sm:block">
               Marketplace
             </span>

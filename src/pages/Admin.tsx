@@ -51,11 +51,13 @@ import {
   Eye,
   CreditCard,
   BarChart3,
+  Megaphone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 import { PaymentQRManager } from "@/components/admin/PaymentQRManager";
 import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
+import { AdManager } from "@/components/admin/AdManager";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -793,42 +795,46 @@ export default function Admin() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 max-w-5xl">
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
+          <TabsList className="flex flex-wrap w-full gap-1 h-auto max-w-5xl">
+            <TabsTrigger value="analytics" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="applications" className="flex items-center gap-2">
-              <Store className="h-4 w-4" />
-              Applications
+            <TabsTrigger value="applications" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Applications</span>
               {pendingApplications.length > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {pendingApplications.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Orders
+            <TabsTrigger value="orders" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Orders</span>
               <Badge variant="secondary" className="ml-1 text-xs">
                 {orders.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payments
+            <TabsTrigger value="payments" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Payments</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Users
+            <TabsTrigger value="ads" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Ads</span>
             </TabsTrigger>
-            <TabsTrigger value="audit" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Audit Logs
+            <TabsTrigger value="users" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              Security
+            <TabsTrigger value="audit" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Audit</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Security</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1061,6 +1067,15 @@ export default function Admin() {
           {/* Payment QR Codes Tab */}
           <TabsContent value="payments">
             <PaymentQRManager />
+          </TabsContent>
+
+          {/* Ads Management Tab */}
+          <TabsContent value="ads">
+            <Card>
+              <CardContent className="pt-6">
+                <AdManager />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* User Management Tab */}

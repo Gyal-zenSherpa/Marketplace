@@ -1,6 +1,8 @@
 import { Facebook, Instagram, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
 export function Footer() {
   const scrollToProducts = () => {
     const productsSection = document.getElementById("products-section");
@@ -69,7 +71,7 @@ export function Footer() {
                 </button>
               </li>
               <li>
-                <Link to="/become-seller" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/become-seller" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Sell on Marketplace
                 </Link>
               </li>
@@ -81,22 +83,22 @@ export function Footer() {
             <h4 className="mb-3 md:mb-4 font-semibold text-foreground text-sm md:text-base">Support</h4>
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Safety Tips
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link to="/report-issue" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/report-issue" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Report an Issue
                 </Link>
               </li>
@@ -108,22 +110,22 @@ export function Footer() {
             <h4 className="mb-3 md:mb-4 font-semibold text-foreground text-sm md:text-base">Legal</h4>
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/cookie-policy" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/cookie-policy" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/refund-policy" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Refund Policy
                 </Link>
               </li>

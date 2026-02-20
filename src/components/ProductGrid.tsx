@@ -123,20 +123,20 @@ export function ProductGrid() {
   }, [allProducts, activeCategory, searchQuery, filters]);
 
   return (
-    <section id="products-section" className="py-12 md:py-16">
-      <div className="container mx-auto px-4">
-        <div className="mb-8 text-center">
-          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">
+    <section id="products-section" className="py-8 sm:py-12 md:py-16">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h2 className="mb-2 sm:mb-3 text-2xl sm:text-3xl font-bold text-foreground md:text-4xl">
             Featured Products
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Discover our curated selection of quality items
           </p>
         </div>
 
         <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <div className="category-filter">
+        <div className="category-filter overflow-x-auto">
           <CategoryFilter
             categories={categories}
             activeCategory={activeCategory}
@@ -150,11 +150,11 @@ export function ProductGrid() {
           maxPrice={maxPrice}
         />
 
-        <div className="mb-4 text-sm text-muted-foreground">
+        <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-muted-foreground">
           Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product, index) => (
             <Link key={product.id} to={`/product/${product.id}`}>
               <ProductCard product={product} index={index} />
@@ -163,8 +163,8 @@ export function ProductGrid() {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="py-12 text-center">
-            <p className="text-lg text-muted-foreground">
+          <div className="py-10 sm:py-12 text-center">
+            <p className="text-base sm:text-lg text-muted-foreground">
               No products found matching your criteria
             </p>
           </div>

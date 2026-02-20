@@ -6,6 +6,7 @@ import { CartSidebar } from "@/components/CartSidebar";
 import { Footer } from "@/components/Footer";
 import { ProductRecommendations } from "@/components/ProductRecommendations";
 import { ChatAssistant } from "@/components/ChatAssistant";
+import { AdBanner } from "@/components/AdBanner";
 
 const Index = () => {
   return (
@@ -25,7 +26,9 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+        <AdBanner position="below-hero" />
         <ProductRecommendations />
+        <AdBanner position="homepage" />
         <ProductGrid />
       </main>
       <CartSidebar />
@@ -36,3 +39,4 @@ const Index = () => {
 };
 
 export default Index;
+

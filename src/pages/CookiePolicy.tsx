@@ -242,30 +242,6 @@ const CookiePolicy = () => {
             </div>
           </div>
 
-          {/* Contact Section */}
-          <div className="bg-primary text-primary-foreground rounded-xl p-4 sm:p-6 text-center mb-6">
-            <h3 className="text-lg font-semibold mb-2">Questions About Cookies?</h3>
-            <p className="text-sm opacity-90 mb-4">
-              If you have any questions about our use of cookies, feel free to contact us.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <a 
-                href="mailto:marketplaceauthentic01@gmail.com" 
-                className="bg-background text-primary px-6 py-3 rounded-lg font-semibold hover:bg-background/90 transition-colors inline-flex items-center justify-center space-x-2"
-              >
-                <Mail className="h-4 w-4" />
-                <span>Email Us</span>
-              </a>
-              <a 
-                href="tel:9763689295" 
-                className="bg-background/20 border-2 border-background px-6 py-3 rounded-lg font-semibold hover:bg-background/30 transition-colors inline-flex items-center justify-center space-x-2"
-              >
-                <Phone className="h-4 w-4" />
-                <span>Call: 9763689295</span>
-              </a>
-            </div>
-          </div>
-
           {/* Consent Statement */}
           <div className="bg-muted/50 border border-border rounded-xl p-4 sm:p-6 text-center mb-6">
             <Cookie className="h-8 w-8 text-primary mx-auto mb-3" />

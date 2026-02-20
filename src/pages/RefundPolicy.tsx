@@ -410,41 +410,6 @@ export default function RefundPolicy() {
             })}
           </div>
 
-          {/* Contact Information */}
-          <div className="border rounded-lg p-4 md:p-6 mb-6 md:mb-8 bg-card">
-            <h2 className="text-base md:text-lg font-semibold text-foreground mb-2">Need Help?</h2>
-            <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">
-              Have a valid issue to report? Contact us within the specified timeline.
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full mb-2 md:mb-3">
-                  <Phone className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-foreground mb-1 text-sm md:text-base">Phone</h3>
-                <p className="text-xs md:text-sm text-muted-foreground">01-XXXXXXX</p>
-                <p className="text-xs md:text-sm text-muted-foreground">98XXXXXXXX</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full mb-2 md:mb-3">
-                  <Mail className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-foreground mb-1 text-sm md:text-base">Email</h3>
-                <p className="text-xs md:text-sm text-muted-foreground break-all">marketplaceauthentic01@gmail.com</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full mb-2 md:mb-3">
-                  <MapPin className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-foreground mb-1 text-sm md:text-base">Location</h3>
-                <p className="text-xs md:text-sm text-muted-foreground">New Road, Kathmandu</p>
-              </div>
-            </div>
-          </div>
-
           {/* Customer Acknowledgment */}
           <div className="bg-muted/50 rounded-lg p-4 md:p-6 mb-6 md:mb-8">
             <h2 className="text-base md:text-lg font-semibold text-foreground mb-2">By Making a Purchase, You Agree:</h2>

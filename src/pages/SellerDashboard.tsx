@@ -358,7 +358,7 @@ export default function SellerDashboard() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price ($)</Label>
+                    <Label htmlFor="price">Price (Rs)</Label>
                     <Input
                       id="price"
                       name="price"
@@ -370,7 +370,7 @@ export default function SellerDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="original_price">Original Price ($)</Label>
+                    <Label htmlFor="original_price">Original Price (Rs)</Label>
                     <Input
                       id="original_price"
                       name="original_price"
@@ -550,7 +550,7 @@ export default function SellerDashboard() {
                   <p className="text-sm text-muted-foreground">{product.brand}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="font-bold text-foreground">
-                      ${Number(product.price).toFixed(2)}
+                      Rs {Number(product.price).toFixed(2)}
                     </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${

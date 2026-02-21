@@ -58,6 +58,7 @@ import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 import { PaymentQRManager } from "@/components/admin/PaymentQRManager";
 import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 import { AdManager } from "@/components/admin/AdManager";
+import { AdSenseManager } from "@/components/admin/AdSenseManager";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -1074,6 +1075,11 @@ export default function Admin() {
             <Card>
               <CardContent className="pt-6">
                 <AdManager />
+              </CardContent>
+            </Card>
+            <Card className="mt-6">
+              <CardContent className="pt-6">
+                <AdSenseManager />
               </CardContent>
             </Card>
           </TabsContent>

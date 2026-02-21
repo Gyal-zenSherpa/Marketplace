@@ -75,7 +75,21 @@ serve(async (req) => {
 
     console.log('Authenticated seller:', user.id);
 
-    const { productName, brand, category, price } = await req.json();
+    const body = await req.json();
+
+    // Validate and sanitize inputs
+    const MAX_TEXT_LENGTH = 200;
+    const productName = typeof body.productName === 'string' ? body.productName.slice(0, MAX_TEXT_LENGTH).trim() : '';
+    const brand = typeof body.brand === 'string' ? body.brand.slice(0, MAX_TEXT_LENGTH).trim() : '';
+    const category = typeof body.category === 'string' ? body.category.slice(0, MAX_TEXT_LENGTH).trim() : '';
+    const price = typeof body.price === 'number' && body.price > 0 && body.price < 1000000 ? body.price : 0;
+
+    if (!productName || !brand || !category || price <= 0) {
+      return new Response(JSON.stringify({ error: 'Invalid input: productName, brand, category (strings) and price (positive number) are required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log('Generating description for:', { productName, brand, category });
 

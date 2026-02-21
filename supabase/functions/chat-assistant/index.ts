@@ -44,8 +44,40 @@ serve(async (req) => {
 
     console.log('User context:', userId);
 
-    const { messages } = await req.json();
+    const body = await req.json();
     
+    // Validate messages input
+    if (!body.messages || !Array.isArray(body.messages)) {
+      return new Response(JSON.stringify({ error: 'Invalid request: messages array required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Sanitize and validate messages
+    const MAX_MESSAGES = 50;
+    const MAX_CONTENT_LENGTH = 2000;
+    const ALLOWED_ROLES = ['user', 'assistant'];
+
+    const messages = body.messages
+      .slice(-MAX_MESSAGES)
+      .filter((msg: any) =>
+        msg && typeof msg.role === 'string' && typeof msg.content === 'string' &&
+        ALLOWED_ROLES.includes(msg.role)
+      )
+      .map((msg: any) => ({
+        role: msg.role as string,
+        content: msg.content.slice(0, MAX_CONTENT_LENGTH).trim(),
+      }))
+      .filter((msg: any) => msg.content.length > 0);
+
+    if (messages.length === 0) {
+      return new Response(JSON.stringify({ error: 'No valid messages provided' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Use service role for fetching products
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 

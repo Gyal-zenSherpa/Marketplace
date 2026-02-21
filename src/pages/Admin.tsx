@@ -148,6 +148,7 @@ export default function Admin() {
   const [searchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [adminTier, setAdminTier] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "analytics");
   
   // Users state
@@ -216,6 +217,17 @@ export default function Admin() {
         }
 
         setIsAdmin(true);
+
+        // Fetch admin's loyalty tier
+        const { data: loyaltyData } = await supabase
+          .from("user_loyalty")
+          .select("current_tier")
+          .eq("user_id", user.id)
+          .single();
+
+        if (loyaltyData) {
+          setAdminTier(loyaltyData.current_tier);
+        }
       } catch (err) {
         console.error("Admin check failed:", err);
         navigate("/");
@@ -430,8 +442,22 @@ export default function Admin() {
     }
   };
 
+  // Gold-tier gate for sensitive actions
+  const requireGoldTier = () => {
+    if (adminTier !== 'Gold') {
+      toast({
+        variant: "destructive",
+        title: "Gold Tier Required",
+        description: "You must be Gold tier in the loyalty program to perform this action.",
+      });
+      return false;
+    }
+    return true;
+  };
+
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: string, userEmail?: string) => {
+    if (!requireGoldTier()) return;
     try {
       const { error } = await supabase
         .from("orders")
@@ -528,6 +554,7 @@ export default function Admin() {
   // Review seller application
   const reviewApplication = async () => {
     if (!selectedApplication) return;
+    if (!requireGoldTier()) return;
 
     try {
       // Update application status
@@ -596,6 +623,7 @@ export default function Admin() {
 
   // Update user role
   const updateUserRole = async (userId: string, newRole: AppRole) => {
+    if (!requireGoldTier()) return;
     try {
       // Check if user already has a role entry
       const { data: existingRole } = await supabase

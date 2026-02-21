@@ -188,7 +188,7 @@ export default function SellerDashboard() {
           productName: formData.name,
           brand: formData.brand,
           category: formData.category,
-          price: formData.price || "0",
+          price: parseFloat(String(formData.price)) || 0,
         },
       });
 

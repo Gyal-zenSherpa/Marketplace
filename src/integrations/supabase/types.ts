@@ -121,6 +121,48 @@ export type Database = {
           },
         ]
       }
+      customer_issues: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          description: string
+          email: string
+          id: string
+          name: string
+          order_number: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string
+          description: string
+          email: string
+          id?: string
+          name: string
+          order_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          name?: string
+          order_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       failed_login_attempts: {
         Row: {
           attempt_count: number | null
@@ -902,6 +944,39 @@ export type Database = {
             referencedColumns: ["name"]
           },
         ]
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

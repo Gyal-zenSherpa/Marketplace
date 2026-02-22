@@ -316,6 +316,23 @@ const SellerApplication = () => {
                   </div>
                 )}
 
+                {existingApplication.status === "rejected" && (
+                  <div className="text-center">
+                    <Button
+                      onClick={() => {
+                        setExistingApplication(null);
+                        setFormData({ business_name: '', business_description: '', phone_number: '' });
+                        setDocumentType('');
+                        setDocumentFile(null);
+                        setDocumentPreview(null);
+                      }}
+                      variant="outline"
+                    >
+                      Re-apply with Updated Documents
+                    </Button>
+                  </div>
+                )}
+
                 {existingApplication.status === "approved" && (
                   <div className="text-center">
                     <Button onClick={() => navigate("/seller")}>

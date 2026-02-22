@@ -52,6 +52,7 @@ import {
   CreditCard,
   BarChart3,
   Megaphone,
+  MessageSquare,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -59,6 +60,7 @@ import { PaymentQRManager } from "@/components/admin/PaymentQRManager";
 import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 import { AdManager } from "@/components/admin/AdManager";
 import { AdSenseManager } from "@/components/admin/AdSenseManager";
+import { CustomerReports } from "@/components/admin/CustomerReports";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -148,7 +150,7 @@ export default function Admin() {
   const [searchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
-  const [adminTier, setAdminTier] = useState<string | null>(null);
+  
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "analytics");
   
   // Users state
@@ -218,16 +220,7 @@ export default function Admin() {
 
         setIsAdmin(true);
 
-        // Fetch admin's loyalty tier
-        const { data: loyaltyData } = await supabase
-          .from("user_loyalty")
-          .select("current_tier")
-          .eq("user_id", user.id)
-          .single();
 
-        if (loyaltyData) {
-          setAdminTier(loyaltyData.current_tier);
-        }
       } catch (err) {
         console.error("Admin check failed:", err);
         navigate("/");
@@ -442,22 +435,8 @@ export default function Admin() {
     }
   };
 
-  // Gold-tier gate for sensitive actions
-  const requireGoldTier = () => {
-    if (adminTier !== 'Gold') {
-      toast({
-        variant: "destructive",
-        title: "Gold Tier Required",
-        description: "You must be Gold tier in the loyalty program to perform this action.",
-      });
-      return false;
-    }
-    return true;
-  };
-
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: string, userEmail?: string) => {
-    if (!requireGoldTier()) return;
     try {
       const { error } = await supabase
         .from("orders")
@@ -554,7 +533,6 @@ export default function Admin() {
   // Review seller application
   const reviewApplication = async () => {
     if (!selectedApplication) return;
-    if (!requireGoldTier()) return;
 
     try {
       // Update application status
@@ -623,7 +601,7 @@ export default function Admin() {
 
   // Update user role
   const updateUserRole = async (userId: string, newRole: AppRole) => {
-    if (!requireGoldTier()) return;
+    
     try {
       // Check if user already has a role entry
       const { data: existingRole } = await supabase
@@ -864,6 +842,10 @@ export default function Admin() {
             <TabsTrigger value="security" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Reports</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1327,6 +1309,11 @@ export default function Admin() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Customer Reports Tab */}
+          <TabsContent value="reports">
+            <CustomerReports />
           </TabsContent>
         </Tabs>
 

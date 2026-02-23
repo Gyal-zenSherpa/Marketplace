@@ -516,6 +516,40 @@ export default function Admin() {
         )
       );
 
+      // Create notification for the user
+      const targetOrder = orders.find(o => o.id === orderId);
+      if (targetOrder) {
+        const notifMap: Record<string, { title: string; message: string }> = {
+          processing: {
+            title: "Order Confirmed ✅",
+            message: `Your order #${orderId.slice(0, 8).toUpperCase()} has been confirmed and is being processed.`,
+          },
+          shipped: {
+            title: "Order Shipped 🚚",
+            message: `Your order #${orderId.slice(0, 8).toUpperCase()} has been shipped! It should arrive in 3-5 business days.`,
+          },
+          delivered: {
+            title: "Order Delivered 📦",
+            message: `Your order #${orderId.slice(0, 8).toUpperCase()} has been delivered! Leave a review to help others.`,
+          },
+          cancelled: {
+            title: "Order Cancelled ❌",
+            message: `Your order #${orderId.slice(0, 8).toUpperCase()} has been cancelled.`,
+          },
+        };
+
+        const notif = notifMap[newStatus];
+        if (notif) {
+          await supabase.from("user_notifications").insert({
+            user_id: targetOrder.user_id,
+            title: notif.title,
+            message: notif.message,
+            type: "order",
+            link: "/orders",
+          });
+        }
+      }
+
       toast({
         title: "Order updated",
         description: `Order status changed to ${newStatus}.`,

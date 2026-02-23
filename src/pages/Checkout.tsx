@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon, Upload, X } from "lucide-react";
+import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon, Upload, X, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +45,13 @@ export default function Checkout() {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const paymentProofInputRef = useRef<HTMLInputElement>(null);
+
+  // Loyalty points state
+  const [availablePoints, setAvailablePoints] = useState(0);
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const [applyingPoints, setApplyingPoints] = useState(false);
+  const [pointsVerified, setPointsVerified] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: "",
     address: "",
@@ -69,6 +76,106 @@ export default function Checkout() {
 
     fetchPaymentQRCodes();
   }, []);
+
+  // Fetch loyalty points
+  useEffect(() => {
+    const fetchLoyaltyPoints = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_loyalty")
+        .select("available_points")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setAvailablePoints(data.available_points);
+      }
+    };
+
+    fetchLoyaltyPoints();
+  }, [user]);
+
+  // Verify points whenever pointsToUse changes
+  useEffect(() => {
+    setPointsVerified(false);
+  }, [pointsToUse]);
+
+  const verifyAndApplyPoints = async () => {
+    if (!user || pointsToUse <= 0) return;
+
+    setApplyingPoints(true);
+    try {
+      // Re-fetch available points from DB to prevent manipulation
+      const { data: freshLoyalty, error } = await supabase
+        .from("user_loyalty")
+        .select("available_points, total_points")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error || !freshLoyalty) {
+        toast({ variant: "destructive", title: "Error", description: "Could not verify loyalty points." });
+        setPointsToUse(0);
+        return;
+      }
+
+      // Verify points match - cross-check with transaction history
+      const { data: transactions } = await supabase
+        .from("points_transactions")
+        .select("points, type, status")
+        .eq("user_id", user.id);
+
+      if (transactions) {
+        const earnedPoints = transactions
+          .filter(t => t.type === "earn" && t.status === "completed")
+          .reduce((sum, t) => sum + t.points, 0);
+        const spentPoints = transactions
+          .filter(t => t.type === "redeem" && t.status === "completed")
+          .reduce((sum, t) => sum + Math.abs(t.points), 0);
+        const calculatedAvailable = earnedPoints - spentPoints;
+
+        // If DB available_points doesn't match calculated, something is off
+        if (Math.abs(freshLoyalty.available_points - calculatedAvailable) > 5) {
+          toast({
+            variant: "destructive",
+            title: "Points verification failed",
+            description: "Your points could not be verified. Please contact support.",
+          });
+          setPointsToUse(0);
+          setAvailablePoints(calculatedAvailable);
+          return;
+        }
+      }
+
+      // Update local available points with fresh data
+      setAvailablePoints(freshLoyalty.available_points);
+
+      if (pointsToUse > freshLoyalty.available_points) {
+        toast({
+          variant: "destructive",
+          title: "Insufficient points",
+          description: `You only have ${freshLoyalty.available_points} available points.`,
+        });
+        setPointsToUse(Math.min(pointsToUse, freshLoyalty.available_points));
+        return;
+      }
+
+      // Points per Rs conversion (1 point = Rs 1 discount, capped at order total)
+      const maxDiscount = totalPrice + totalPrice * 0.1; // subtotal + tax
+      if (pointsToUse > maxDiscount) {
+        setPointsToUse(Math.floor(maxDiscount));
+        toast({ title: "Points adjusted", description: `Maximum ${Math.floor(maxDiscount)} points can be applied.` });
+        return;
+      }
+
+      setPointsVerified(true);
+      toast({ title: "Points verified ✓", description: `${pointsToUse} points will be applied as Rs. ${pointsToUse.toFixed(2)} discount.` });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to verify points." });
+      setPointsToUse(0);
+    } finally {
+      setApplyingPoints(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -96,23 +203,13 @@ export default function Checkout() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an image file.",
-        variant: "destructive",
-      });
+      toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 5MB.",
-        variant: "destructive",
-      });
+      toast({ title: "File too large", description: "Please upload an image smaller than 5MB.", variant: "destructive" });
       return;
     }
 
@@ -140,8 +237,6 @@ export default function Checkout() {
         .upload(fileName, paymentProof, { upsert: true });
 
       if (uploadError) throw uploadError;
-
-      // Store the file path (not public URL) since bucket is private
       return fileName;
     } catch (error) {
       console.error("Payment proof upload error:", error);
@@ -149,27 +244,38 @@ export default function Checkout() {
     }
   };
 
+  const shipping = 0;
+  const tax = totalPrice * 0.1;
+  const pointsDiscount = pointsVerified ? pointsToUse : 0;
+  const grandTotal = Math.max(0, totalPrice + shipping + tax - pointsDiscount);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Login required",
-        description: "Please login to complete your order",
-      });
+      toast({ variant: "destructive", title: "Login required", description: "Please login to complete your order" });
       navigate("/auth");
       return;
     }
 
-    // Validate payment proof for online payments
     if (paymentMethod === "online" && !paymentProof) {
-      toast({
-        variant: "destructive",
-        title: "Payment proof required",
-        description: "Please upload a screenshot of your payment.",
-      });
+      toast({ variant: "destructive", title: "Payment proof required", description: "Please upload a screenshot of your payment." });
       return;
+    }
+
+    // Re-verify points before placing order
+    if (pointsToUse > 0 && pointsVerified) {
+      const { data: freshLoyalty } = await supabase
+        .from("user_loyalty")
+        .select("available_points")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!freshLoyalty || freshLoyalty.available_points < pointsToUse) {
+        toast({ variant: "destructive", title: "Points changed", description: "Your available points changed. Please re-verify." });
+        setPointsVerified(false);
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -177,26 +283,35 @@ export default function Checkout() {
     try {
       const validated = shippingSchema.parse(formData);
 
-      // Record T&C agreement
       await supabase.from("terms_agreements").insert({
         user_id: user.id,
         version: "1.0",
         user_agent: navigator.userAgent,
       });
 
-      // Create order with email included for shipping notifications
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
           total: grandTotal,
-          shipping_address: { ...validated, paymentMethod, email: user.email },
+          shipping_address: { ...validated, paymentMethod, email: user.email, pointsUsed: pointsDiscount },
           status: "pending",
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
+
+      // Deduct loyalty points if used
+      if (pointsDiscount > 0) {
+        await supabase
+          .from("user_loyalty")
+          .update({
+            available_points: availablePoints - pointsDiscount,
+            total_points: availablePoints - pointsDiscount,
+          })
+          .eq("user_id", user.id);
+      }
 
       // Upload payment proof if online payment
       let paymentProofUrl: string | null = null;
@@ -206,7 +321,6 @@ export default function Checkout() {
         setUploadingProof(false);
 
         if (paymentProofUrl) {
-          // Update order with payment proof URL
           await supabase
             .from("orders")
             .update({ payment_proof_url: paymentProofUrl })
@@ -228,6 +342,15 @@ export default function Checkout() {
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
+
+      // Create notification for order placed
+      await supabase.from("user_notifications").insert({
+        user_id: user.id,
+        title: "Order Placed Successfully! 🎉",
+        message: `Your order #${order.id.slice(0, 8).toUpperCase()} has been placed. We'll notify you when it ships.`,
+        type: "order",
+        link: "/orders",
+      });
 
       // Send order confirmation email
       try {
@@ -252,33 +375,23 @@ export default function Checkout() {
             paymentMethod,
           },
         });
-        console.log('Order confirmation email sent');
       } catch (emailError) {
         console.error('Failed to send order confirmation email:', emailError);
-        // Don't fail the order if email fails
       }
 
       clearCart();
       toast({
         title: "Order placed!",
-        description: paymentMethod === "cod" 
-          ? "Thank you! Pay when your order arrives. Check your email for confirmation." 
-          : "Thank you! Your payment proof has been submitted. Check your email for confirmation.",
+        description: paymentMethod === "cod"
+          ? "Thank you! Pay when your order arrives."
+          : "Thank you! Your payment proof has been submitted.",
       });
       navigate("/orders");
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({
-          variant: "destructive",
-          title: "Validation error",
-          description: err.errors[0].message,
-        });
+        toast({ variant: "destructive", title: "Validation error", description: err.errors[0].message });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Order failed",
-          description: "Something went wrong. Please try again.",
-        });
+        toast({ variant: "destructive", title: "Order failed", description: "Something went wrong. Please try again." });
       }
     } finally {
       setIsProcessing(false);
@@ -286,138 +399,87 @@ export default function Checkout() {
     }
   };
 
-  const shipping = 0;
-  const tax = totalPrice * 0.1;
-  const grandTotal = totalPrice + shipping + tax;
-
   const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 sm:py-8">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 sm:mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Shopping
         </button>
 
-        <h1 className="text-3xl font-bold text-foreground mb-8">Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-8">
           {/* Shipping Form */}
-          <div className="bg-card rounded-2xl shadow-card p-6">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="bg-card rounded-2xl shadow-card p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <Truck className="h-5 w-5 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground">Shipping Information</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Shipping Information</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  placeholder=""
-                  required
-                />
+                <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="address">Street Address</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder=""
-                  required
-                />
+                <Input id="address" name="address" value={formData.address} onChange={handleInputChange} required />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    required
-                  />
+                  <Input id="city" name="city" value={formData.city} onChange={handleInputChange} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Province</Label>
-                  <Input
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    required
-                  />
+                  <Input id="state" name="state" value={formData.state} onChange={handleInputChange} required />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="zipCode">Postal Code</Label>
-                  <Input
-                    id="zipCode"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    required
-                  />
+                  <Input id="zipCode" name="zipCode" value={formData.zipCode} onChange={handleInputChange} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    required
-                  />
+                  <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required />
                 </div>
               </div>
             </form>
           </div>
 
           {/* Order Summary */}
-          <div className="bg-card rounded-2xl shadow-card p-6 h-fit">
-            <h2 className="text-xl font-semibold text-foreground mb-6">Order Summary</h2>
+          <div className="bg-card rounded-2xl shadow-card p-4 sm:p-6 h-fit">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6">Order Summary</h2>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-16 w-16 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground line-clamp-1">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                <div key={item.id} className="flex gap-3 sm:gap-4">
+                  <img src={item.image} alt={item.name} className="h-14 w-14 sm:h-16 sm:w-16 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-foreground line-clamp-1 text-sm sm:text-base">{item.name}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-foreground text-sm sm:text-base whitespace-nowrap">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-border pt-4 space-y-3">
+            <div className="border-t border-border pt-4 space-y-2 sm:space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-foreground">{formatPrice(totalPrice)}</span>
@@ -430,14 +492,61 @@ export default function Checkout() {
                 <span className="text-muted-foreground">Tax (10%)</span>
                 <span className="text-foreground">{formatPrice(tax)}</span>
               </div>
+              {pointsDiscount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span className="flex items-center gap-1"><Coins className="h-3.5 w-3.5" /> Points Discount</span>
+                  <span>-{formatPrice(pointsDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-3 border-t border-border">
                 <span className="font-semibold text-foreground">Total</span>
-                <span className="font-bold text-xl text-foreground">{formatPrice(grandTotal)}</span>
+                <span className="font-bold text-lg sm:text-xl text-foreground">{formatPrice(grandTotal)}</span>
               </div>
             </div>
 
+            {/* Loyalty Points Section */}
+            {user && availablePoints > 0 && (
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-amber-600" />
+                  Use Loyalty Points
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  You have <span className="font-semibold text-amber-600">{availablePoints}</span> points available (1 point = Rs. 1)
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={availablePoints}
+                    value={pointsToUse || ""}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value) || 0, availablePoints);
+                      setPointsToUse(val);
+                    }}
+                    placeholder="Enter points to use"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant={pointsVerified ? "default" : "outline"}
+                    onClick={verifyAndApplyPoints}
+                    disabled={applyingPoints || pointsToUse <= 0 || pointsVerified}
+                    className="whitespace-nowrap"
+                  >
+                    {applyingPoints ? "Verifying..." : pointsVerified ? "Verified ✓" : "Apply"}
+                  </Button>
+                </div>
+                {pointsVerified && (
+                  <p className="text-xs text-green-600 mt-2">
+                    ✓ {pointsToUse} points verified and applied (-{formatPrice(pointsDiscount)})
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Payment Method Selection */}
-            <div className="mt-6 pt-6 border-t border-border">
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-primary" />
                 Payment Method
@@ -453,8 +562,8 @@ export default function Checkout() {
                   <Label htmlFor="cod" className="flex items-center gap-2 cursor-pointer flex-1">
                     <Banknote className="h-5 w-5 text-green-600" />
                     <div>
-                      <p className="font-medium">Cash on Delivery (COD)</p>
-                      <p className="text-sm text-muted-foreground">Pay when your order arrives</p>
+                      <p className="font-medium text-sm sm:text-base">Cash on Delivery (COD)</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Pay when your order arrives</p>
                     </div>
                   </Label>
                 </div>
@@ -464,8 +573,8 @@ export default function Checkout() {
                   <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer flex-1">
                     <QrCode className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="font-medium">Online Payment</p>
-                      <p className="text-sm text-muted-foreground">Pay via Bank Transfer or Esewa</p>
+                      <p className="font-medium text-sm sm:text-base">Online Payment</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Pay via Bank Transfer or Esewa</p>
                     </div>
                   </Label>
                 </div>
@@ -473,44 +582,38 @@ export default function Checkout() {
 
               {/* QR Codes for Online Payment */}
               {paymentMethod === "online" && (
-                <div className="mt-6 p-4 bg-secondary/50 rounded-lg">
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-secondary/50 rounded-lg">
                   <h4 className="font-medium text-foreground mb-4">Select Payment Method</h4>
                   
-                  {/* Payment Type Selection */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-4">
                     {paymentQRCodes.map((qr) => (
                       <button
                         key={qr.id}
                         type="button"
                         onClick={() => setSelectedPaymentType(qr.type as PaymentType)}
-                        className={`p-3 rounded-lg border-2 text-center transition-all ${
+                        className={`p-2 sm:p-3 rounded-lg border-2 text-center transition-all ${
                           selectedPaymentType === qr.type
                             ? "border-primary bg-primary/10"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <span className="font-medium text-sm">{qr.name}</span>
+                        <span className="font-medium text-xs sm:text-sm">{qr.name}</span>
                       </button>
                     ))}
                   </div>
 
-                  {/* Show selected QR code */}
                   {selectedPaymentType && (
                     <div className="text-center mb-4">
                       {(() => {
                         const selectedQR = paymentQRCodes.find((qr) => qr.type === selectedPaymentType);
                         return selectedQR?.image_url ? (
                           <div className="inline-block">
-                            <img
-                              src={selectedQR.image_url}
-                              alt={selectedQR.name}
-                              className="w-48 h-48 object-contain rounded-lg border-2 border-border mx-auto"
-                            />
+                            <img src={selectedQR.image_url} alt={selectedQR.name} className="w-40 h-40 sm:w-48 sm:h-48 object-contain rounded-lg border-2 border-border mx-auto" />
                             <p className="mt-2 text-sm font-medium">{selectedQR.name}</p>
                             <p className="text-xs text-muted-foreground">Scan to pay</p>
                           </div>
                         ) : (
-                          <div className="w-48 h-48 mx-auto rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                          <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto rounded-lg border-2 border-dashed border-border flex items-center justify-center">
                             <div className="text-center text-muted-foreground">
                               <ImageIcon className="h-10 w-10 mx-auto mb-2" />
                               <p className="text-sm">QR not available</p>
@@ -521,51 +624,31 @@ export default function Checkout() {
                     </div>
                   )}
 
-                  {/* Payment Proof Upload */}
                   {selectedPaymentType && (
-                    <div className="mt-6 pt-4 border-t border-border">
+                    <div className="mt-4 sm:mt-6 pt-4 border-t border-border">
                       <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
                         <Upload className="h-4 w-4" />
                         Upload Payment Screenshot
                       </h4>
-                      <p className="text-sm text-muted-foreground mb-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3">
                         Please upload a screenshot of your payment confirmation
                       </p>
                       
                       {paymentProofPreview ? (
                         <div className="relative w-full max-w-xs mx-auto">
-                          <img
-                            src={paymentProofPreview}
-                            alt="Payment proof preview"
-                            className="w-full rounded-lg border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-8 w-8"
-                            onClick={removePaymentProof}
-                          >
+                          <img src={paymentProofPreview} alt="Payment proof preview" className="w-full rounded-lg border" />
+                          <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-8 w-8" onClick={removePaymentProof}>
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
                       ) : (
-                        <div
-                          onClick={() => paymentProofInputRef.current?.click()}
-                          className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
-                        >
+                        <div onClick={() => paymentProofInputRef.current?.click()} className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-primary transition-colors">
                           <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Click to upload payment screenshot</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Click to upload payment screenshot</p>
                           <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
                         </div>
                       )}
-                      <input
-                        ref={paymentProofInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePaymentProofChange}
-                        className="hidden"
-                      />
+                      <input ref={paymentProofInputRef} type="file" accept="image/*" onChange={handlePaymentProofChange} className="hidden" />
                     </div>
                   )}
                 </div>
@@ -573,8 +656,7 @@ export default function Checkout() {
             </div>
 
             {/* Terms and Place Order */}
-            <div className="mt-6 space-y-4">
-              {/* Terms and Conditions */}
+            <div className="mt-4 sm:mt-6 space-y-4">
               <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                 <input
                   type="checkbox"
@@ -583,13 +665,9 @@ export default function Checkout() {
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
                   className="mt-1 h-4 w-4 rounded border-border"
                 />
-                <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                <label htmlFor="terms" className="text-xs sm:text-sm text-muted-foreground cursor-pointer">
                   👇 Read the{" "}
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    className="text-primary hover:underline font-medium"
-                  >
+                  <a href="/terms" target="_blank" className="text-primary hover:underline font-medium">
                     Terms and Conditions
                   </a>{" "}
                   carefully before placing your order. By checking this box, you agree to our terms.
@@ -599,7 +677,7 @@ export default function Checkout() {
               <Button
                 type="submit"
                 onClick={handleSubmit}
-                className="w-full gradient-hero text-primary-foreground h-12"
+                className="w-full gradient-hero text-primary-foreground h-11 sm:h-12"
                 disabled={isProcessing || !agreedToTerms || (paymentMethod === "online" && (!selectedPaymentType || !paymentProof))}
               >
                 <CreditCard className="h-5 w-5 mr-2" />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw, Zap } from "lucide-react";
+import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw, Zap, MessageSquare } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -17,10 +18,40 @@ export default function ProductDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+
+  // Check if user purchased this product
+  useEffect(() => {
+    const checkPurchase = async () => {
+      if (!user || !id) return;
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id, status, order_items!inner(product_id)")
+        .eq("user_id", user.id)
+        .eq("status", "delivered");
+
+      const purchased = orders?.some((order: any) =>
+        order.order_items.some((item: any) => item.product_id === id)
+      );
+      setHasPurchased(!!purchased);
+
+      // Check if already reviewed
+      const { data: review } = await supabase
+        .from("product_reviews")
+        .select("id")
+        .eq("product_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setHasReviewed(!!review);
+    };
+    checkPurchase();
+  }, [user, id]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -241,9 +272,32 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* Review Prompt for Purchased Products */}
+        {hasPurchased && !hasReviewed && (
+          <div className="mt-8 p-4 sm:p-6 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3 mb-2">
+              <MessageSquare className="h-6 w-6 text-amber-600" />
+              <h3 className="font-semibold text-foreground">You purchased this product!</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Your order has been delivered. Share your experience — your review will help others make better decisions.
+            </p>
+            <Button
+              onClick={() => {
+                const reviewSection = document.querySelector('[data-review-section]');
+                reviewSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <Star className="h-4 w-4 mr-2" />
+              Leave a Review
+            </Button>
+          </div>
+        )}
+
         {/* Product Reviews Section */}
         {id && (
-          <div className="mt-16">
+          <div className="mt-16" data-review-section>
             <ProductReviews productId={id} />
           </div>
         )}

@@ -244,18 +244,21 @@ export default function Orders() {
                           {order.order_items.length} item{order.order_items.length > 1 ? "s" : ""}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-foreground">{formatPrice(order.total)}</p>
-                          <p className="text-sm text-muted-foreground capitalize">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                        <div className="text-left sm:text-right">
+                          <p className="text-lg sm:text-xl font-bold text-foreground">{formatPrice(order.total)}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground capitalize">
                             {order.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}
                           </p>
                         </div>
-                        <Button variant="outline" onClick={() => openOrderDetail(order)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        <OrderInvoice order={order} />
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openOrderDetail(order)}>
+                            <Eye className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">View Details</span>
+                            <span className="sm:hidden">View</span>
+                          </Button>
+                          <OrderInvoice order={order} />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -269,7 +272,7 @@ export default function Orders() {
 
       {/* Order Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />

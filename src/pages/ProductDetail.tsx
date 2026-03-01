@@ -12,6 +12,7 @@ import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { products as staticProducts } from "@/data/products";
 import { Product } from "@/types/product";
+import { formatNepaliPrice } from "@/lib/formatNepali";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -193,11 +194,11 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-bold text-foreground">
-                Rs. {product.price.toFixed(2)}
+                {formatNepaliPrice(product.price)}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-muted-foreground line-through">
-                  Rs. {product.originalPrice.toFixed(2)}
+                  {formatNepaliPrice(product.originalPrice)}
                 </span>
               )}
             </div>

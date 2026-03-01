@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -25,6 +24,8 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isHovering, setIsHovering] = useState(false);
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -54,6 +55,30 @@ export function NotificationBell() {
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  // Auto-scroll animation
+  useEffect(() => {
+    if (!open || isHovering || notifications.length <= 3) return;
+
+    const container = scrollRef.current;
+    if (!container) return;
+
+    let animationId: number;
+    let scrollPos = 0;
+    const speed = 0.5; // pixels per frame
+
+    const animate = () => {
+      scrollPos += speed;
+      if (scrollPos >= container.scrollHeight - container.clientHeight) {
+        scrollPos = 0;
+      }
+      container.scrollTop = scrollPos;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [open, isHovering, notifications.length]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -92,17 +117,22 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-3 border-b">
-          <h4 className="font-semibold text-sm">Notifications</h4>
+          <h4 className="font-semibold text-sm">Messages</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllRead}>
               Mark all read
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-80">
+        <div
+          ref={scrollRef}
+          className="max-h-80 overflow-y-auto"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
           {notifications.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
-              No notifications yet
+              No messages yet
             </div>
           ) : (
             notifications.map((notif) => (
@@ -128,7 +158,7 @@ export function NotificationBell() {
               </button>
             ))
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { formatNepaliPrice, formatNepaliNumber } from "@/lib/formatNepali";
 
 const shippingSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
@@ -124,7 +125,7 @@ export default function Checkout() {
         .select("points, type, status")
         .eq("user_id", user.id);
 
-      if (transactions) {
+      if (transactions && transactions.length > 0) {
         const earnedPoints = transactions
           .filter(t => t.type === "earn" && t.status === "completed")
           .reduce((sum, t) => sum + t.points, 0);
@@ -133,18 +134,20 @@ export default function Checkout() {
           .reduce((sum, t) => sum + Math.abs(t.points), 0);
         const calculatedAvailable = earnedPoints - spentPoints;
 
-        // If DB available_points doesn't match calculated, something is off
-        if (Math.abs(freshLoyalty.available_points - calculatedAvailable) > 5) {
+        // Only flag if there's a significant discrepancy AND transactions exist
+        // Allow tolerance since bonus points may be awarded outside transaction log
+        if (calculatedAvailable < 0 || (transactions.length > 2 && Math.abs(freshLoyalty.available_points - calculatedAvailable) > freshLoyalty.available_points * 0.5)) {
           toast({
             variant: "destructive",
             title: "Points verification failed",
             description: "Your points could not be verified. Please contact support.",
           });
           setPointsToUse(0);
-          setAvailablePoints(calculatedAvailable);
           return;
         }
       }
+      // If no transactions exist, trust the available_points from user_loyalty table
+      // (points may have been awarded via signup bonus or admin action)
 
       // Update local available points with fresh data
       setAvailablePoints(freshLoyalty.available_points);
@@ -168,7 +171,7 @@ export default function Checkout() {
       }
 
       setPointsVerified(true);
-      toast({ title: "Points verified ✓", description: `${pointsToUse} points will be applied as Rs. ${pointsToUse.toFixed(2)} discount.` });
+      toast({ title: "Points verified ✓", description: `${pointsToUse} points will be applied as ${formatNepaliPrice(pointsToUse)} discount.` });
     } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to verify points." });
       setPointsToUse(0);
@@ -399,7 +402,7 @@ export default function Checkout() {
     }
   };
 
-  const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
+  const formatPrice = (price: number) => formatNepaliPrice(price);
 
   return (
     <div className="min-h-screen bg-background">
@@ -512,7 +515,7 @@ export default function Checkout() {
                   Use Loyalty Points
                 </h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  You have <span className="font-semibold text-amber-600">{availablePoints}</span> points available (1 point = Rs. 1)
+                  You have <span className="font-semibold text-amber-600">{formatNepaliNumber(availablePoints)}</span> points available (1 point = Rs. 1)
                 </p>
                 <div className="flex gap-2">
                   <Input

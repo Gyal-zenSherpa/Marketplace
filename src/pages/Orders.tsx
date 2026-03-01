@@ -16,6 +16,7 @@ import { OrderInvoice } from "@/components/orders/OrderInvoice";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { formatNepaliPrice } from "@/lib/formatNepali";
 
 function PaymentProofDisplay({ paymentProofPath }: { paymentProofPath: string }) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
@@ -176,7 +177,7 @@ export default function Orders() {
     setDetailOpen(true);
   };
 
-  const formatPrice = (price: number) => `Rs. ${price.toFixed(2)}`;
+  const formatPrice = (price: number) => formatNepaliPrice(price);
 
   const getStatusConfig = (status: string) => {
     return STATUS_CONFIG[status] || STATUS_CONFIG.pending;

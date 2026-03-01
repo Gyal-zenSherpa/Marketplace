@@ -14,6 +14,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { formatNepaliPrice } from "@/lib/formatNepali";
 
 const categories = ["Electronics", "Fashion", "Home", "Food", "Sports", "women", "men", "kids"];
 
@@ -242,6 +243,21 @@ export default function SellerDashboard() {
 
         if (error) throw error;
         toast({ title: "Product created successfully" });
+
+        // Notify all users about the new product via email
+        try {
+          await supabase.functions.invoke("notify-new-product", {
+            body: {
+              productName: formData.name,
+              productBrand: formData.brand,
+              productCategory: formData.category,
+              productPrice: formData.price,
+              productImage: formData.image,
+            },
+          });
+        } catch (emailErr) {
+          console.error("Failed to send new product notification emails:", emailErr);
+        }
       }
 
       setIsDialogOpen(false);
@@ -550,7 +566,7 @@ export default function SellerDashboard() {
                   <p className="text-sm text-muted-foreground">{product.brand}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="font-bold text-foreground">
-                      Rs {Number(product.price).toFixed(2)}
+                      {formatNepaliPrice(Number(product.price))}
                     </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${

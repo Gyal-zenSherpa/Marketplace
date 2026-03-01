@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { format } from "date-fns";
+import { formatNepaliPrice } from "@/lib/formatNepali";
 
 interface OrderItem {
   product_name: string;
@@ -92,15 +93,15 @@ export function OrderInvoice({ order }: OrderInvoiceProps) {
         <tr>
           <td>${item.product_name}</td>
           <td style="text-align: center;">${item.quantity}</td>
-          <td style="text-align: right;">Rs. ${item.product_price.toFixed(2)}</td>
-          <td style="text-align: right;">Rs. ${(item.product_price * item.quantity).toFixed(2)}</td>
+          <td style="text-align: right;">${formatNepaliPrice(item.product_price)}</td>
+          <td style="text-align: right;">${formatNepaliPrice(item.product_price * item.quantity)}</td>
         </tr>
       `
         )
         .join("")}
       <tr class="total-row">
         <td colspan="3" style="text-align: right;">Grand Total</td>
-        <td style="text-align: right;">Rs. ${order.total.toFixed(2)}</td>
+        <td style="text-align: right;">${formatNepaliPrice(order.total)}</td>
       </tr>
     </tbody>
   </table>

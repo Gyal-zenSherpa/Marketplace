@@ -6,6 +6,7 @@ import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
 import { useWishlistContext } from "@/context/WishlistContext";
 import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
+import { formatNepaliNumber } from "@/lib/formatNepali";
 
 interface ProductCardProps {
   product: Product;
@@ -148,11 +149,11 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
           {/* Price */}
           <div className="mt-auto flex items-baseline gap-1.5 md:gap-2">
             <span className="text-base md:text-xl font-bold text-foreground">
-              Rs. {product.price.toFixed(0)}
+              Rs. {formatNepaliNumber(product.price).split('.')[0]}
             </span>
             {product.originalPrice && (
               <span className="text-xs md:text-sm text-muted-foreground line-through">
-                Rs. {product.originalPrice.toFixed(0)}
+                Rs. {formatNepaliNumber(product.originalPrice).split('.')[0]}
               </span>
             )}
           </div>

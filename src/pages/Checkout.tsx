@@ -106,74 +106,51 @@ export default function Checkout() {
 
     setApplyingPoints(true);
     try {
-      // Re-fetch available points from DB to prevent manipulation
+      // Re-fetch available points from DB
       const { data: freshLoyalty, error } = await supabase
         .from("user_loyalty")
         .select("available_points, total_points")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error || !freshLoyalty) {
-        toast({ variant: "destructive", title: "Error", description: "Could not verify loyalty points." });
+        toast({ variant: "destructive", title: "Error", description: "Could not fetch loyalty points. You may not have a loyalty account yet." });
         setPointsToUse(0);
         return;
       }
 
-      // Verify points match - cross-check with transaction history
-      const { data: transactions } = await supabase
-        .from("points_transactions")
-        .select("points, type, status")
-        .eq("user_id", user.id);
-
-      if (transactions && transactions.length > 0) {
-        const earnedPoints = transactions
-          .filter(t => t.type === "earn" && t.status === "completed")
-          .reduce((sum, t) => sum + t.points, 0);
-        const spentPoints = transactions
-          .filter(t => t.type === "redeem" && t.status === "completed")
-          .reduce((sum, t) => sum + Math.abs(t.points), 0);
-        const calculatedAvailable = earnedPoints - spentPoints;
-
-        // Only flag if there's a significant discrepancy AND transactions exist
-        // Allow tolerance since bonus points may be awarded outside transaction log
-        if (calculatedAvailable < 0 || (transactions.length > 2 && Math.abs(freshLoyalty.available_points - calculatedAvailable) > freshLoyalty.available_points * 0.5)) {
-          toast({
-            variant: "destructive",
-            title: "Points verification failed",
-            description: "Your points could not be verified. Please contact support.",
-          });
-          setPointsToUse(0);
-          return;
-        }
-      }
-      // If no transactions exist, trust the available_points from user_loyalty table
-      // (points may have been awarded via signup bonus or admin action)
-
       // Update local available points with fresh data
       setAvailablePoints(freshLoyalty.available_points);
 
-      if (pointsToUse > freshLoyalty.available_points) {
-        toast({
-          variant: "destructive",
-          title: "Insufficient points",
-          description: `You only have ${freshLoyalty.available_points} available points.`,
-        });
-        setPointsToUse(Math.min(pointsToUse, freshLoyalty.available_points));
+      if (freshLoyalty.available_points <= 0) {
+        toast({ variant: "destructive", title: "No points available", description: "You don't have any loyalty points to redeem." });
+        setPointsToUse(0);
         return;
       }
 
-      // Points per Rs conversion (1 point = Rs 1 discount, capped at order total)
-      const maxDiscount = totalPrice + totalPrice * 0.1; // subtotal + tax
+      if (pointsToUse > freshLoyalty.available_points) {
+        const capped = freshLoyalty.available_points;
+        setPointsToUse(capped);
+        toast({
+          variant: "destructive",
+          title: "Insufficient points",
+          description: `You only have ${formatNepaliNumber(freshLoyalty.available_points)} available points. Adjusted automatically.`,
+        });
+        return;
+      }
+
+      // Cap at order total (subtotal + tax)
+      const maxDiscount = totalPrice + totalPrice * 0.1;
       if (pointsToUse > maxDiscount) {
         setPointsToUse(Math.floor(maxDiscount));
-        toast({ title: "Points adjusted", description: `Maximum ${Math.floor(maxDiscount)} points can be applied.` });
+        toast({ title: "Points adjusted", description: `Maximum ${formatNepaliNumber(Math.floor(maxDiscount))} points can be applied.` });
         return;
       }
 
       setPointsVerified(true);
-      toast({ title: "Points verified ✓", description: `${pointsToUse} points will be applied as ${formatNepaliPrice(pointsToUse)} discount.` });
+      toast({ title: "Points verified ✓", description: `${formatNepaliNumber(pointsToUse)} points will be applied as ${formatNepaliPrice(pointsToUse)} discount.` });
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to verify points." });
+      toast({ variant: "destructive", title: "Error", description: "Failed to verify points. Please try again." });
       setPointsToUse(0);
     } finally {
       setApplyingPoints(false);

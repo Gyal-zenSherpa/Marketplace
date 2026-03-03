@@ -121,6 +121,144 @@ export type Database = {
           },
         ]
       }
+      commission_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      commission_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          recorded_by: string | null
+          reference_number: string | null
+          seller_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          recorded_by?: string | null
+          reference_number?: string | null
+          seller_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          recorded_by?: string | null
+          reference_number?: string | null
+          seller_id?: string
+        }
+        Relationships: []
+      }
+      commission_transactions: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          is_dispute: boolean
+          is_refund: boolean
+          net_to_seller: number
+          notes: string | null
+          order_id: string
+          order_item_id: string | null
+          paid_at: string | null
+          payment_due_date: string
+          payment_status: string
+          post_tax_amount: number
+          product_name: string
+          sale_price: number
+          seller_id: string
+          tax_amount: number
+          updated_at: string
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate: number
+          created_at?: string
+          id?: string
+          is_dispute?: boolean
+          is_refund?: boolean
+          net_to_seller: number
+          notes?: string | null
+          order_id: string
+          order_item_id?: string | null
+          paid_at?: string | null
+          payment_due_date: string
+          payment_status?: string
+          post_tax_amount: number
+          product_name: string
+          sale_price: number
+          seller_id: string
+          tax_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          is_dispute?: boolean
+          is_refund?: boolean
+          net_to_seller?: number
+          notes?: string | null
+          order_id?: string
+          order_item_id?: string | null
+          paid_at?: string | null
+          payment_due_date?: string
+          payment_status?: string
+          post_tax_amount?: number
+          product_name?: string
+          sale_price?: number
+          seller_id?: string
+          tax_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_transactions_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_issues: {
         Row: {
           admin_notes: string | null
@@ -1030,7 +1168,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      seller_commission_summary: {
+        Row: {
+          commission_dues: number | null
+          commission_paid: number | null
+          next_due_date: string | null
+          overall_status: string | null
+          seller_id: string | null
+          total_commission_generated: number | null
+          total_sales_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_data: { Args: never; Returns: undefined }
@@ -1046,6 +1195,10 @@ export type Database = {
           status: string
           updated_at: string
         }[]
+      }
+      get_seller_commission_rate: {
+        Args: { p_seller_id: string }
+        Returns: number
       }
       get_user_roles: {
         Args: { _user_id: string }

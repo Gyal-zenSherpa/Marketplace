@@ -53,6 +53,7 @@ import {
   BarChart3,
   Megaphone,
   MessageSquare,
+  Percent,
 } from "lucide-react";
 import { format } from "date-fns";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -61,6 +62,7 @@ import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 import { AdManager } from "@/components/admin/AdManager";
 import { AdSenseManager } from "@/components/admin/AdSenseManager";
 import { CustomerReports } from "@/components/admin/CustomerReports";
+import { CommissionManager } from "@/components/admin/CommissionManager";
 
 type AppRole = "admin" | "moderator" | "seller" | "user";
 
@@ -550,6 +552,90 @@ export default function Admin() {
         }
       }
 
+      // Calculate and record commission on confirmed sale (delivered)
+      if (newStatus === "delivered" && targetOrder) {
+        try {
+          // Get order items with product details to find seller
+          const { data: orderItems } = await supabase
+            .from("order_items")
+            .select("id, product_name, product_price, quantity, product_id")
+            .eq("order_id", orderId);
+
+          if (orderItems) {
+            // Get grace period from config
+            const { data: graceConfig } = await supabase
+              .from("commission_config")
+              .select("value")
+              .eq("key", "grace_period_days")
+              .single();
+            const graceDays = parseInt(graceConfig?.value || "30");
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + graceDays);
+
+            for (const item of orderItems) {
+              // Find seller for this product
+              let sellerId: string | null = null;
+              if (item.product_id) {
+                const { data: product } = await supabase
+                  .from("products")
+                  .select("seller_id")
+                  .eq("id", item.product_id)
+                  .single();
+                sellerId = product?.seller_id || null;
+              }
+
+              if (!sellerId) continue;
+
+              // Get commission rate for this seller
+              const { data: rateData } = await supabase.rpc("get_seller_commission_rate", { p_seller_id: sellerId });
+              const commissionRate = rateData ?? 10;
+
+              const salePrice = item.product_price * item.quantity;
+              const taxAmount = salePrice * 0.1; // 10% tax
+              const postTaxAmount = salePrice - taxAmount;
+              const commissionAmount = postTaxAmount * (commissionRate / 100);
+              const netToSeller = postTaxAmount - commissionAmount;
+
+              // Check if commission already exists for this order item
+              const { data: existing } = await supabase
+                .from("commission_transactions")
+                .select("id")
+                .eq("order_id", orderId)
+                .eq("order_item_id", item.id)
+                .maybeSingle();
+
+              if (!existing) {
+                await supabase.from("commission_transactions").insert({
+                  order_id: orderId,
+                  order_item_id: item.id,
+                  seller_id: sellerId,
+                  product_name: item.product_name,
+                  sale_price: salePrice,
+                  tax_amount: taxAmount,
+                  post_tax_amount: postTaxAmount,
+                  commission_rate: commissionRate,
+                  commission_amount: commissionAmount,
+                  net_to_seller: netToSeller,
+                  payment_status: "pending",
+                  payment_due_date: dueDate.toISOString(),
+                });
+
+                // Notify seller about commission
+                await supabase.from("user_notifications").insert({
+                  user_id: sellerId,
+                  title: "Commission Recorded 📊",
+                  message: `Commission of Rs. ${commissionAmount.toFixed(0)} (${commissionRate}%) recorded for "${item.product_name}". Due by ${dueDate.toLocaleDateString()}.`,
+                  type: "commission",
+                  link: "/seller-dashboard",
+                });
+              }
+            }
+          }
+        } catch (commErr) {
+          console.error("Failed to calculate commission:", commErr);
+        }
+      }
+
       toast({
         title: "Order updated",
         description: `Order status changed to ${newStatus}.`,
@@ -880,6 +966,10 @@ export default function Admin() {
             <TabsTrigger value="reports" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="commission" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Commission</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1554,6 +1644,11 @@ export default function Admin() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Commission Tab */}
+        <TabsContent value="commission">
+          <CommissionManager />
+        </TabsContent>
       </div>
     </div>
   );

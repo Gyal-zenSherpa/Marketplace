@@ -13,6 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { formatNepaliPrice, formatNepaliNumber } from "@/lib/formatNepali";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const NEPAL_PROVINCES = [
+  "Koshi",
+  "Madhesh",
+  "Bagmati",
+  "Gandaki",
+  "Lumbini",
+  "Karnali",
+  "Sudurpashchim",
+];
 
 const shippingSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
@@ -423,7 +434,21 @@ export default function Checkout() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Province</Label>
-                  <Input id="state" name="state" value={formData.state} onChange={handleInputChange} required />
+                  <Select
+                    value={formData.state}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
+                  >
+                    <SelectTrigger id="state">
+                      <SelectValue placeholder="Select Province" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NEPAL_PROVINCES.map((province) => (
+                        <SelectItem key={province} value={province}>
+                          {province}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

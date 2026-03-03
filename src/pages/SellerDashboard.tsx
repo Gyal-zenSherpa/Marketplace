@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,8 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatNepaliPrice } from "@/lib/formatNepali";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SellerCommissionView } from "@/components/seller/SellerCommissionView";
 
 const categories = ["Electronics", "Fashion", "Home", "Food", "Sports", "women", "men", "kids"];
 
@@ -329,13 +331,29 @@ export default function SellerDashboard() {
           Back to Marketplace
         </button>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Seller Dashboard</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your product listings
+              Manage your product listings & commissions
             </p>
           </div>
+        </div>
+
+        <Tabs defaultValue="products" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="products" className="flex items-center gap-1.5">
+              <Package className="h-4 w-4" />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="commission" className="flex items-center gap-1.5">
+              <DollarSign className="h-4 w-4" />
+              Commission
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
+          <div className="flex items-center justify-end mb-4">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openNewDialog} className="gradient-hero text-primary-foreground">
@@ -600,6 +618,12 @@ export default function SellerDashboard() {
             ))}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="commission">
+            <SellerCommissionView />
+          </TabsContent>
+        </Tabs>
       </main>
       <Footer />
     </div>

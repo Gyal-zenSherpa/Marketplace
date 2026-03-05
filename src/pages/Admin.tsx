@@ -1439,6 +1439,11 @@ export default function Admin() {
           <TabsContent value="reports">
             <CustomerReports />
           </TabsContent>
+
+          {/* Commission Tab */}
+          <TabsContent value="commission">
+            <CommissionManager />
+          </TabsContent>
         </Tabs>
 
         {/* Review Application Dialog */}
@@ -1645,10 +1650,6 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
 
-        {/* Commission Tab */}
-        <TabsContent value="commission">
-          <CommissionManager />
-        </TabsContent>
       </div>
     </div>
   );

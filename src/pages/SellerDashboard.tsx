@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ const initialForm: ProductForm = {
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -340,7 +341,7 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        <Tabs defaultValue="products" className="space-y-6">
+        <Tabs defaultValue={searchParams.get("tab") || "products"} className="space-y-6">
           <TabsList>
             <TabsTrigger value="products" className="flex items-center gap-1.5">
               <Package className="h-4 w-4" />

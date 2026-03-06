@@ -18,6 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { RefreshCw, Search, DollarSign, AlertTriangle, CheckCircle, Clock, Eye } from "lucide-react";
 
 interface CommissionTransaction {
@@ -350,6 +351,7 @@ export function CommissionManager() {
                     <TableHead className="text-right">Paid</TableHead>
                     <TableHead className="text-right">Dues</TableHead>
                     <TableHead>Due Date</TableHead>
+                    <TableHead>Payment Progress</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -357,6 +359,10 @@ export function CommissionManager() {
                 <TableBody>
                   {filteredSellers.map(seller => {
                     const badge = STATUS_BADGES[seller.overall_status] || STATUS_BADGES.pending;
+                    const paidPercent = seller.total_commission_generated > 0
+                      ? Math.round((seller.commission_paid / seller.total_commission_generated) * 100)
+                      : 0;
+                    const isFullyPaid = seller.commission_dues <= 0 && seller.total_commission_generated > 0;
                     return (
                       <TableRow key={seller.seller_id}>
                         <TableCell>
@@ -378,7 +384,19 @@ export function CommissionManager() {
                             : "–"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                          <div className="w-24 space-y-1">
+                            <Progress value={paidPercent} className={`h-2 ${isFullyPaid ? "[&>div]:bg-green-500" : seller.overall_status === "overdue" ? "[&>div]:bg-destructive" : "[&>div]:bg-orange-500"}`} />
+                            <p className="text-[10px] text-muted-foreground text-center">
+                              {isFullyPaid ? "✅ Paid in Full" : `${paidPercent}% paid`}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isFullyPaid ? (
+                            <Badge variant="default" className="bg-green-600 text-white text-xs">Cleared</Badge>
+                          ) : (
+                            <Badge variant={badge.variant}>{badge.label}</Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">

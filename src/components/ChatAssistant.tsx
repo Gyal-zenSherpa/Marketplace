@@ -13,7 +13,7 @@ interface Message {
 export function ChatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hi! I'm Gyal-Zeen, your virtual assistant. I'm here to help you find the perfect products, answer your questions, and make your shopping experience easy and enjoyable. How can I assist you today?" }
+    { role: "assistant", content: "Hi, I'm Gyalzen! Your virtual assistant. So how can I help you today?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);

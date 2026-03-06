@@ -114,10 +114,20 @@ export function AdManager() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("ads").delete().eq("id", id);
-    if (error) { toast.error("Failed to delete ad"); return; }
-    toast.success("Ad deleted");
-    fetchAds();
+    if (!window.confirm("Are you sure you want to delete this ad?")) return;
+    try {
+      const { error, status } = await supabase.from("ads").delete().eq("id", id);
+      if (error) {
+        console.error("Ad delete error:", error.message, error.code, error.details);
+        toast.error(`Failed to delete ad: ${error.message}`);
+        return;
+      }
+      toast.success("Ad deleted");
+      fetchAds();
+    } catch (err: any) {
+      console.error("Ad delete exception:", err);
+      toast.error(`Delete failed: ${err?.message || "Network error"}`);
+    }
   };
 
   const toggleActive = async (id: string, current: boolean) => {

@@ -18,6 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { RefreshCw, Search, DollarSign, AlertTriangle, CheckCircle, Clock, Eye } from "lucide-react";
 
 interface CommissionTransaction {

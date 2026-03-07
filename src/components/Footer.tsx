@@ -66,9 +66,9 @@ export function Footer() {
                 </button>
               </li>
               <li>
-                <button onClick={scrollToProducts} className="text-muted-foreground hover:text-primary transition-colors">
-                  Today's Deals
-                </button>
+                <Link to="/about" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
+                  About Us
+                </Link>
               </li>
               <li>
                 <Link to="/become-seller" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">

@@ -115,7 +115,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/terms" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy-policy" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>

@@ -28,6 +28,9 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ReportIssue from "./pages/ReportIssue";
+import Disclaimer from "./pages/Disclaimer";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

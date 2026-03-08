@@ -5,17 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper to decode JWT and extract payload
-function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 // Encryption helpers using Web Crypto API
 async function getEncryptionKey(): Promise<CryptoKey> {

@@ -129,6 +129,11 @@ export function Footer() {
                   Refund Policy
                 </Link>
               </li>
+              <li>
+                <Link to="/disclaimer" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
+                  Disclaimer
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

@@ -4,6 +4,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -28,14 +38,11 @@ const statusConfig = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-shipping-update function invoked");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
@@ -52,13 +59,31 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    console.log(`Authenticated user: ${claimsData.claims.sub}`);
+    const userId = claimsData.claims.sub;
+
+    // Require admin role for sending shipping updates
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: userId,
+      _role: 'admin',
+    });
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
     const { orderId, userEmail, userName, status, trackingNumber, estimatedDelivery, shippingAddress }: ShippingUpdateRequest = await req.json();
 
-    console.log(`Sending shipping update for order ${orderId} - Status: ${status}`);
-
     const config = statusConfig[status];
+    const safeUserName = escapeHtml(userName || 'Valued Customer');
+    const safeOrderId = escapeHtml(orderId.slice(0, 8).toUpperCase());
+    const safeTrackingNumber = trackingNumber ? escapeHtml(trackingNumber) : '';
+    const safeEstimatedDelivery = estimatedDelivery ? escapeHtml(estimatedDelivery) : '';
+
     const progressSteps = [
       { label: "Order Placed", active: true },
       { label: "Processing", active: ["processing", "shipped", "out_for_delivery", "delivered"].includes(status) },
@@ -89,11 +114,11 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">${config.message}</p>
           </div>
           <div style="padding: 30px;">
-            <p style="color: #374151; font-size: 16px;">Hi ${userName || 'Valued Customer'},</p>
+            <p style="color: #374151; font-size: 16px;">Hi ${safeUserName},</p>
             <div style="background-color: ${config.bgColor}; border-radius: 8px; padding: 20px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #374151;"><strong>Order ID:</strong> #${orderId.slice(0, 8).toUpperCase()}</p>
-              ${trackingNumber ? `<p style="margin: 0 0 10px 0; color: #374151;"><strong>Tracking Number:</strong> ${trackingNumber}</p>` : ''}
-              ${estimatedDelivery ? `<p style="margin: 0; color: #374151;"><strong>Estimated Delivery:</strong> ${estimatedDelivery}</p>` : ''}
+              <p style="margin: 0 0 10px 0; color: #374151;"><strong>Order ID:</strong> #${safeOrderId}</p>
+              ${safeTrackingNumber ? `<p style="margin: 0 0 10px 0; color: #374151;"><strong>Tracking Number:</strong> ${safeTrackingNumber}</p>` : ''}
+              ${safeEstimatedDelivery ? `<p style="margin: 0; color: #374151;"><strong>Estimated Delivery:</strong> ${safeEstimatedDelivery}</p>` : ''}
             </div>
             <div style="margin: 30px 0;">
               <h3 style="color: #1f2937; font-size: 16px; margin-bottom: 20px;">Order Progress</h3>
@@ -101,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 20px;">
               <h3 style="color: #374151; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase;">Shipping To</h3>
-              <p style="margin: 0; color: #1f2937; line-height: 1.6;">${shippingAddress.fullName}<br>${shippingAddress.address}<br>${shippingAddress.city}</p>
+              <p style="margin: 0; color: #1f2937; line-height: 1.6;">${escapeHtml(shippingAddress.fullName)}<br>${escapeHtml(shippingAddress.address)}<br>${escapeHtml(shippingAddress.city)}</p>
             </div>
             ${status === 'delivered' ? `<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 8px; margin-top: 25px; text-align: center;"><p style="margin: 0 0 10px 0; color: #92400e; font-weight: 600;">⭐ How was your experience?</p><p style="margin: 0; color: #a16207; font-size: 14px;">We'd love to hear your feedback!</p></div>` : ''}
           </div>
@@ -118,11 +143,9 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Marketplace <onboarding@resend.dev>",
       to: [userEmail],
-      subject: `${config.emoji} ${config.title} - Order #${orderId.slice(0, 8).toUpperCase()}`,
+      subject: `${config.emoji} ${config.title} - Order #${safeOrderId}`,
       html,
     });
-
-    console.log("Shipping update email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
@@ -130,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-shipping-update function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

@@ -4,26 +4,28 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface WelcomeEmailRequest {
-  userEmail: string;
-  userName: string;
-}
-
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-welcome-email function called");
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
@@ -40,11 +42,20 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    console.log(`Authenticated user: ${claimsData.claims.sub}`);
+    const userId = claimsData.claims.sub;
 
-    const { userEmail, userName }: WelcomeEmailRequest = await req.json();
+    // Derive email server-side from authenticated user
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (userError || !userData?.user?.email) {
+      return new Response(JSON.stringify({ error: 'Could not resolve user email' }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
-    console.log(`Sending welcome email to ${userEmail}`);
+    const userEmail = userData.user.email;
+    const userName = escapeHtml(userData.user.user_metadata?.full_name || 'there');
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -119,15 +130,13 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Welcome email sent successfully:", emailResponse);
-
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error in send-welcome-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
   }
 };
 

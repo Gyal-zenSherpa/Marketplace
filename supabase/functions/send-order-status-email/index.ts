@@ -4,6 +4,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -29,23 +39,13 @@ const getStatusColor = (status: string) => {
 const getStatusTitle = (status: string) => {
   switch (status) { case "approved": return "Payment Approved - Order Confirmed!"; case "cancelled": return "Order Cancelled"; default: return "Order Update"; }
 };
-const getStatusMessage = (status: string, userName: string) => {
-  switch (status) {
-    case "approved": return `Great news, ${userName}! Your payment has been approved and your order is now being processed.`;
-    case "cancelled": return `Dear ${userName}, we regret to inform you that your order has been cancelled.`;
-    default: return `Hello ${userName}, there's an update on your order.`;
-  }
-};
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-order-status-email function called");
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
@@ -62,16 +62,37 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    console.log(`Authenticated user: ${claimsData.claims.sub}`);
+    const userId = claimsData.claims.sub;
+
+    // Require admin role for sending order status emails
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: userId,
+      _role: 'admin',
+    });
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
     const { orderId, userEmail, userName, status, orderTotal, orderItems = [], cancellationReason }: OrderStatusEmailRequest = await req.json();
 
-    console.log(`Sending ${status} email for order ${orderId} to ${userEmail}`);
-
+    const safeUserName = escapeHtml(userName || 'Valued Customer');
     const statusColor = getStatusColor(status);
     const statusEmoji = getStatusEmoji(status);
     const statusTitle = getStatusTitle(status);
-    const statusMessage = getStatusMessage(status, userName);
+
+    const getStatusMessage = (s: string) => {
+      switch (s) {
+        case "approved": return `Great news, ${safeUserName}! Your payment has been approved and your order is now being processed.`;
+        case "cancelled": return `Dear ${safeUserName}, we regret to inform you that your order has been cancelled.`;
+        default: return `Hello ${safeUserName}, there's an update on your order.`;
+      }
+    };
 
     const itemsHtml = orderItems.length > 0 ? `
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -82,21 +103,21 @@ const handler = async (req: Request): Promise<Response> => {
         </tr>
         ${orderItems.map(item => `
           <tr>
-            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
-            <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
-            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">NPR ${item.price.toLocaleString()}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.name)}</td>
+            <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">${Number(item.quantity)}</td>
+            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">NPR ${Number(item.price).toLocaleString()}</td>
           </tr>
         `).join('')}
         <tr style="background-color: #f9fafb;">
           <td colspan="2" style="padding: 12px; font-weight: bold;">Total</td>
-          <td style="padding: 12px; text-align: right; font-weight: bold;">NPR ${orderTotal.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right; font-weight: bold;">NPR ${Number(orderTotal).toLocaleString()}</td>
         </tr>
       </table>
     ` : '';
 
     const cancellationHtml = status === "cancelled" && cancellationReason ? `
       <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0;">
-        <p style="color: #991b1b; margin: 0;"><strong>Reason:</strong> ${cancellationReason}</p>
+        <p style="color: #991b1b; margin: 0;"><strong>Reason:</strong> ${escapeHtml(cancellationReason)}</p>
       </div>
     ` : '';
 
@@ -116,6 +137,8 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
+    const safeOrderId = escapeHtml(orderId.slice(0, 8).toUpperCase());
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -129,10 +152,10 @@ const handler = async (req: Request): Promise<Response> => {
                   <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">${statusTitle}</h1>
                 </td></tr>
                 <tr><td style="padding: 40px 30px;">
-                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">${statusMessage}</p>
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">${getStatusMessage(status)}</p>
                   <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #111827; margin: 0 0 12px 0;">Order Details</h3>
-                    <p style="color: #6b7280; margin: 0;"><strong>Order ID:</strong> ${orderId.slice(0, 8).toUpperCase()}<br><strong>Total:</strong> NPR ${orderTotal.toLocaleString()}</p>
+                    <p style="color: #6b7280; margin: 0;"><strong>Order ID:</strong> ${safeOrderId}<br><strong>Total:</strong> NPR ${Number(orderTotal).toLocaleString()}</p>
                   </div>
                   ${itemsHtml}${cancellationHtml}${nextStepsHtml}
                 </td></tr>
@@ -150,11 +173,9 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Marketplace <onboarding@resend.dev>",
       to: [userEmail],
-      subject: `${statusEmoji} ${statusTitle} - Order #${orderId.slice(0, 8).toUpperCase()}`,
+      subject: `${statusEmoji} ${statusTitle} - Order #${safeOrderId}`,
       html: emailHtml,
     });
-
-    console.log("Order status email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
@@ -162,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-order-status-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
   }
 };
 

@@ -4,7 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-// HTML escape helper to prevent injection
 function escapeHtml(str: string): string {
   if (!str) return '';
   return str
@@ -29,8 +28,6 @@ interface OrderItem {
 
 interface OrderConfirmationRequest {
   orderId: string;
-  userEmail: string;
-  userName: string;
   orderItems: OrderItem[];
   total: number;
   shippingAddress: {
@@ -44,21 +41,14 @@ interface OrderConfirmationRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-order-confirmation function invoked");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      console.error("Missing or invalid authorization header");
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     const token = authHeader.replace('Bearer ', '');
@@ -69,26 +59,31 @@ const handler = async (req: Request): Promise<Response> => {
     );
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims?.sub) {
-      console.error("Invalid token:", claimsError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    console.log(`Authenticated user: ${claimsData.claims.sub}`);
+    const userId = claimsData.claims.sub;
+
+    // Derive email server-side from authenticated user
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (userError || !userData?.user?.email) {
+      return new Response(JSON.stringify({ error: 'Could not resolve user email' }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    const userEmail = userData.user.email;
+    const userName = userData.user.user_metadata?.full_name || 'Valued Customer';
 
     const {
       orderId,
-      userEmail,
-      userName,
       orderItems,
       total,
       shippingAddress,
       paymentMethod,
     }: OrderConfirmationRequest = await req.json();
-
-    console.log(`Sending order confirmation for order ${orderId} to ${userEmail}`);
 
     const itemsHtml = orderItems
       .map(
@@ -114,11 +109,11 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 Order Confirmed!</h1>
-            <p style="color: #fecaca; margin: 10px 0 0 0;">Thank you for your purchase, ${escapeHtml(userName || 'Valued Customer')}!</p>
+            <p style="color: #fecaca; margin: 10px 0 0 0;">Thank you for your purchase, ${escapeHtml(userName)}!</p>
           </div>
           <div style="padding: 30px;">
             <div style="background-color: #fef2f2; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
-              <p style="margin: 0; color: #991b1b; font-weight: 600;">Order ID: #${orderId.slice(0, 8).toUpperCase()}</p>
+              <p style="margin: 0; color: #991b1b; font-weight: 600;">Order ID: #${escapeHtml(orderId.slice(0, 8).toUpperCase())}</p>
             </div>
             <h2 style="color: #1f2937; font-size: 18px; margin-bottom: 15px;">Order Summary</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
@@ -134,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
               <tfoot>
                 <tr>
                   <td colspan="3" style="padding: 15px 12px; text-align: right; font-weight: 700; color: #1f2937; font-size: 18px;">Grand Total:</td>
-                  <td style="padding: 15px 12px; text-align: right; font-weight: 700; color: #dc2626; font-size: 18px;">Rs. ${total.toLocaleString()}</td>
+                  <td style="padding: 15px 12px; text-align: right; font-weight: 700; color: #dc2626; font-size: 18px;">Rs. ${Number(total).toLocaleString()}</td>
                 </tr>
               </tfoot>
             </table>
@@ -183,15 +178,13 @@ const handler = async (req: Request): Promise<Response> => {
       html,
     });
 
-    console.log("Order confirmation email sent successfully:", emailResponse);
-
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error in send-order-confirmation function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

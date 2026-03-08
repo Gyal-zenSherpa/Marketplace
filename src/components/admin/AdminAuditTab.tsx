@@ -83,7 +83,7 @@ export function AdminAuditTab() {
                 <TableHead className="w-[50px]" />
                 <TableHead>Action</TableHead>
                 <TableHead>Resource</TableHead>
-                <TableHead>IP Address</TableHead>
+                <TableHead className="hidden md:table-cell">IP Address</TableHead>
                 <TableHead>Timestamp</TableHead>
               </TableRow>
             </TableHeader>

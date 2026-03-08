@@ -56,22 +56,37 @@ export default function SellerDashboard() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [sellerVerified, setSellerVerified] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
       return;
     }
     
-    // Redirect non-sellers to the seller application page
-    if (!loading && user && profile && !profile.is_seller) {
-      toast({
-        variant: "destructive",
-        title: "Access Denied",
-        description: "You must be an approved seller to access the dashboard.",
-      });
-      navigate("/become-seller");
+    // Server-side seller verification
+    if (!loading && user) {
+      const verifySeller = async () => {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("is_seller")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error || !data?.is_seller) {
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You must be an approved seller to access the dashboard.",
+          });
+          navigate("/become-seller");
+        } else {
+          setSellerVerified(true);
+        }
+      };
+      verifySeller();
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, loading, navigate]);
 
   const fetchProducts = useCallback(async () => {
     const { data, error } = await supabase
@@ -312,7 +327,7 @@ export default function SellerDashboard() {
     setIsDialogOpen(true);
   };
 
-  if (loading) {
+  if (loading || !sellerVerified) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>

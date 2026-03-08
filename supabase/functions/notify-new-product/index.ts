@@ -7,18 +7,86 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { productName, productBrand, productCategory, productPrice, productImage } = await req.json();
+    // 1. Verify JWT authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+
+    // 2. Verify admin role
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: userId,
+      _role: 'admin',
+    });
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Parse and sanitize input
+    const { productName, productBrand, productCategory, productPrice, productImage } = await req.json();
+
+    const safeName = escapeHtml(String(productName || ''));
+    const safeBrand = escapeHtml(String(productBrand || ''));
+    const safeCategory = escapeHtml(String(productCategory || ''));
+    const safePrice = escapeHtml(String(productPrice || ''));
+
+    // Validate image URL if provided
+    let safeImageHtml = '';
+    if (productImage) {
+      try {
+        const imgUrl = new URL(String(productImage));
+        if (['http:', 'https:'].includes(imgUrl.protocol)) {
+          safeImageHtml = `<img src="${escapeHtml(imgUrl.href)}" alt="${safeName}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 16px;" />`;
+        }
+      } catch {
+        // Invalid URL, skip image
+      }
+    }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
@@ -55,7 +123,7 @@ serve(async (req) => {
       });
     }
 
-    // Send email in batches (Resend allows up to 100 recipients per batch)
+    // Send email in batches
     const batchSize = 50;
     let sentCount = 0;
 
@@ -72,16 +140,16 @@ serve(async (req) => {
           from: "Marketplace <onboarding@resend.dev>",
           bcc: batch,
           to: "noreply@marketplace.com",
-          subject: `🆕 New Product Alert: ${productName} by ${productBrand}!`,
+          subject: `🆕 New Product Alert: ${safeName} by ${safeBrand}!`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #333; text-align: center;">🛍️ New Product Just Added!</h1>
               <div style="background: #f9f9f9; border-radius: 12px; padding: 24px; margin: 20px 0;">
-                ${productImage ? `<img src="${productImage}" alt="${productName}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 16px;" />` : ''}
-                <h2 style="color: #333; margin: 0 0 8px;">${productName}</h2>
-                <p style="color: #666; margin: 0 0 8px;">Brand: <strong>${productBrand}</strong></p>
-                <p style="color: #666; margin: 0 0 8px;">Category: ${productCategory}</p>
-                <p style="color: #333; font-size: 24px; font-weight: bold; margin: 16px 0;">Rs. ${productPrice}</p>
+                ${safeImageHtml}
+                <h2 style="color: #333; margin: 0 0 8px;">${safeName}</h2>
+                <p style="color: #666; margin: 0 0 8px;">Brand: <strong>${safeBrand}</strong></p>
+                <p style="color: #666; margin: 0 0 8px;">Category: ${safeCategory}</p>
+                <p style="color: #333; font-size: 24px; font-weight: bold; margin: 16px 0;">Rs. ${safePrice}</p>
                 <a href="https://marketplace-gzn.lovable.app" style="display: inline-block; background: #6366f1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Shop Now</a>
               </div>
               <p style="color: #999; font-size: 12px; text-align: center;">You received this because you're a registered user of Marketplace.</p>
@@ -104,7 +172,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

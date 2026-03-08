@@ -327,7 +327,7 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-semibold mb-2">Customer</h4>
                   <div className="bg-muted rounded-lg p-3 text-sm">

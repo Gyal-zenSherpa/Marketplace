@@ -68,6 +68,9 @@ const App = () => {
                     <Route path="/about" element={<About />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/report-issue" element={<ReportIssue />} />
+                    <Route path="/disclaimer" element={<Disclaimer />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>

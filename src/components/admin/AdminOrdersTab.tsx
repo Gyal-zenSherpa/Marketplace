@@ -269,9 +269,9 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
                   <TableHead>Order ID</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>Payment</TableHead>
+                  <TableHead className="hidden md:table-cell">Payment</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>

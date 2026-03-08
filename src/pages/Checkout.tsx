@@ -348,8 +348,6 @@ export default function Checkout() {
         await supabase.functions.invoke('send-order-confirmation', {
           body: {
             orderId: order.id,
-            userEmail: user.email,
-            userName: validated.fullName,
             orderItems: cartItems.map(item => ({
               product_name: item.name,
               quantity: item.quantity,

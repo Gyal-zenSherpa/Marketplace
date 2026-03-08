@@ -6,7 +6,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -14,25 +13,74 @@ Deno.serve(async (req) => {
   try {
     const { email, password, setupKey } = await req.json();
     
-    // Validate setup key from secure environment secret
     const ADMIN_SETUP_SECRET = Deno.env.get('ADMIN_SETUP_SECRET');
     if (!ADMIN_SETUP_SECRET || setupKey !== ADMIN_SETUP_SECRET) {
+      // Log failed attempt
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const logClient = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      await logClient.from('security_audit_log').insert({
+        action: 'setup_admin_failed',
+        resource_type: 'admin_setup',
+        ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+        user_agent: req.headers.get('user-agent') || 'unknown',
+        metadata: { reason: 'invalid_setup_key', email: email || 'not_provided' },
+      });
+
       return new Response(
         JSON.stringify({ error: 'Invalid setup key' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Rate limit: max 5 attempts per hour per IP
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Create admin client with service role
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
+      auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    const { count } = await supabaseAdmin
+      .from('security_audit_log')
+      .select('*', { count: 'exact', head: true })
+      .eq('action', 'setup_admin_attempt')
+      .eq('ip_address', clientIp)
+      .gte('created_at', oneHourAgo);
+
+    if (count && count >= 5) {
+      return new Response(
+        JSON.stringify({ error: 'Too many attempts. Try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Log this attempt
+    await supabaseAdmin.from('security_audit_log').insert({
+      action: 'setup_admin_attempt',
+      resource_type: 'admin_setup',
+      ip_address: clientIp,
+      user_agent: req.headers.get('user-agent') || 'unknown',
+      metadata: { email },
+    });
+
+    // Check if admin already exists - prevent creating multiple admins
+    const { data: existingAdmins } = await supabaseAdmin
+      .from('user_roles')
+      .select('id')
+      .eq('role', 'admin')
+      .limit(1);
+
+    if (existingAdmins && existingAdmins.length > 0) {
+      return new Response(
+        JSON.stringify({ error: 'Admin account already exists. This function is disabled.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
@@ -41,33 +89,19 @@ Deno.serve(async (req) => {
     let userId: string;
 
     if (existingUser) {
-      console.log('User already exists, updating...');
       userId = existingUser.id;
-      
-      // Update password and confirm email
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
         password: password,
-        email_confirm: true
+        email_confirm: true,
       });
-      
-      if (updateError) {
-        console.error('Error updating user:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
     } else {
-      console.log('Creating new admin user...');
-      // Create new user with email confirmed
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: email,
         password: password,
-        email_confirm: true
+        email_confirm: true,
       });
-      
-      if (createError) {
-        console.error('Error creating user:', createError);
-        throw createError;
-      }
-      
+      if (createError) throw createError;
       userId = newUser.user.id;
     }
 
@@ -80,24 +114,13 @@ Deno.serve(async (req) => {
       .single();
 
     if (!existingRole) {
-      // Assign admin role
       const { error: roleError } = await supabaseAdmin
         .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: 'admin'
-        });
-      
-      if (roleError) {
-        console.error('Error assigning admin role:', roleError);
-        throw roleError;
-      }
-      console.log('Admin role assigned successfully');
-    } else {
-      console.log('User already has admin role');
+        .insert({ user_id: userId, role: 'admin' });
+      if (roleError) throw roleError;
     }
 
-    // Create profile if it doesn't exist
+    // Create profile if needed
     const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('*')
@@ -105,25 +128,23 @@ Deno.serve(async (req) => {
       .single();
 
     if (!existingProfile) {
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          user_id: userId,
-          full_name: 'Admin User'
-        });
-      
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Non-fatal, continue
-      }
+      await supabaseAdmin.from('profiles').insert({
+        user_id: userId,
+        full_name: 'Admin User',
+      });
     }
 
+    // Log success
+    await supabaseAdmin.from('security_audit_log').insert({
+      action: 'setup_admin_success',
+      resource_type: 'admin_setup',
+      user_id: userId,
+      ip_address: clientIp,
+      user_agent: req.headers.get('user-agent') || 'unknown',
+    });
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Admin account created/updated successfully',
-        userId: userId
-      }),
+      JSON.stringify({ success: true, message: 'Admin account created successfully', userId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

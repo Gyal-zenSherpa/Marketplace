@@ -293,15 +293,15 @@ export default function Checkout() {
 
       if (orderError) throw orderError;
 
-      // Deduct loyalty points if used
+      // Deduct loyalty points via secure server-side function
       if (pointsDiscount > 0) {
-        await supabase
-          .from("user_loyalty")
-          .update({
-            available_points: availablePoints - pointsDiscount,
-            total_points: availablePoints - pointsDiscount,
-          })
-          .eq("user_id", user.id);
+        const { data: redeemResult, error: redeemError } = await supabase.functions.invoke('redeem-points', {
+          body: { orderId: order.id, pointsToRedeem: pointsDiscount },
+        });
+        if (redeemError) {
+          console.error('Points redemption failed:', redeemError);
+          // Non-fatal: order is already placed, log the issue
+        }
       }
 
       // Upload payment proof if online payment

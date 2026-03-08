@@ -1,39 +1,53 @@
 
 
-## Plan: Admin Gold-Tier Gate and Rs Currency in Seller Dashboard
+## Responsive Fixes for Seller Dashboard & Admin Pages
 
-### 1. Change Currency from $ to Rs in Seller Dashboard
+### Issues Identified
 
-**File: `src/pages/SellerDashboard.tsx`**
+All four sections share the same problems on mobile:
 
-Update three locations:
-- **Line 361**: Change `Price ($)` label to `Price (Rs)`
-- **Line 373**: Change `Original Price ($)` label to `Original Price (Rs)`
-- **Line 553**: Change `${Number(product.price).toFixed(2)}` to `Rs ${Number(product.price).toFixed(2)}` in the product list display
+1. **Card headers** use `flex items-center justify-between` with fixed-width search inputs (`w-64`) that overflow on small screens
+2. **Tables** have too many columns for mobile, causing horizontal overflow without proper scroll
+3. **Seller Dashboard** title row and product cards don't stack properly on small screens
+4. **Admin page** header and stats grid are fine, but the TabsList with 10 tabs needs better mobile wrapping
 
-### 2. Add Gold-Tier Verification for Admin Sensitive Actions
+### Plan
 
-**File: `src/pages/Admin.tsx`**
+**1. Admin Orders Tab (`AdminOrdersTab.tsx`)**
+- Stack the card header vertically on mobile: title block on top, search + filter below (`flex-col md:flex-row`)
+- Make search input full-width on mobile (`w-full md:w-64`)
+- Wrap the table in `overflow-x-auto` for horizontal scroll
+- Hide less critical columns (Payment, Date) on mobile using `hidden md:table-cell`
+- In order detail dialog, stack the 2-column grids to single column on mobile (`grid-cols-1 md:grid-cols-2`)
 
-After the admin role check succeeds (around line 218), add a query to the `user_loyalty` table to fetch the admin's `current_tier`. Store it in state. Then, before performing sensitive actions (role changes, order status updates, seller application approvals), check if the admin is Gold tier. If not, show a toast warning and block the action.
+**2. Admin Users Tab (`AdminUsersTab.tsx`)**
+- Same header fix: stack vertically on mobile
+- Search input full-width on mobile
+- Hide User ID column on mobile (`hidden md:table-cell`)
+- Wrap table in `overflow-x-auto`
 
-Sensitive actions to gate:
-- Changing user roles
-- Approving/rejecting seller applications
-- Updating order statuses
+**3. Admin Audit Tab (`AdminAuditTab.tsx`)**
+- Same header fix
+- Hide IP Address column on mobile
+- Wrap table in `overflow-x-auto`
 
----
+**4. Seller Dashboard (`SellerDashboard.tsx`)**
+- Make title responsive (`text-2xl md:text-3xl`)
+- Product list cards: stack image, info, and actions vertically on mobile instead of horizontal flex
+- Make the product action buttons row on mobile
 
-### Technical Details
+**5. Admin Page Layout (`Admin.tsx`)**
+- Stats cards already use `grid-cols-1 md:grid-cols-4` -- good
+- The TabsList already has `flex-wrap` -- verify it scrolls properly; add `overflow-x-auto` if needed
 
-**Currency changes** (SellerDashboard.tsx):
-- Line 361: `Price ($)` to `Price (Rs)`
-- Line 373: `Original Price ($)` to `Original Price (Rs)`
-- Line 553: `$` prefix to `Rs` prefix in product listing
+**6. Header & Footer**
+- Header already handles mobile with Sheet menu -- no changes needed
+- Footer is already responsive -- no changes needed
 
-**Gold-tier gate** (Admin.tsx):
-- Add state: `const [adminTier, setAdminTier] = useState<string | null>(null);`
-- After admin check, fetch tier: `supabase.from("user_loyalty").select("current_tier").eq("user_id", user.id).single()`
-- Create a helper: `const requireGoldTier = () => { if (adminTier !== 'Gold') { toast warning; return false; } return true; }`
-- Add `if (!requireGoldTier()) return;` at the start of role update, seller approval, and order status update handlers
+### Files to Edit
+- `src/components/admin/AdminOrdersTab.tsx`
+- `src/components/admin/AdminUsersTab.tsx`
+- `src/components/admin/AdminAuditTab.tsx`
+- `src/pages/SellerDashboard.tsx`
+- `src/pages/Admin.tsx` (minor TabsList adjustment)
 

@@ -145,6 +145,9 @@ export function Footer() {
 
         <div className="mt-6 md:mt-8 border-t border-border pt-6 md:pt-8 text-center text-xs md:text-sm text-muted-foreground">
           <p>&copy; 2024 Marketplace. All rights reserved.</p>
+          <p className="mt-2 text-xs text-muted-foreground/70">
+            All trademarks belong to their respective owners. Products are listed by independent marketplace sellers.
+          </p>
           <p className="mt-2 md:mt-3 flex items-center justify-center gap-2">
             Made by <a href="https://github.com/Gyal-zenSherpa" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground hover:text-primary transition-colors underline underline-offset-2">Gyal-Zeen Sherpa</a>
             <img 

@@ -571,24 +571,24 @@ export default function SellerDashboard() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-card rounded-xl shadow-card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                className="bg-card rounded-xl shadow-card p-3 sm:p-4 flex flex-row items-center gap-3 sm:gap-4 w-full overflow-hidden"
               >
                 <img
                   src={product.image || "https://via.placeholder.com/80"}
                   alt={product.name}
-                  className="h-20 w-20 rounded-lg object-cover shrink-0"
+                  className="h-14 w-14 sm:h-20 sm:w-20 rounded-lg object-cover shrink-0"
                 />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground truncate">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{product.brand}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="font-bold text-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{product.brand}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
+                    <span className="font-bold text-foreground text-sm sm:text-base">
                       {formatNepaliPrice(Number(product.price))}
                     </span>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap ${
                         product.inStock
                           ? "bg-primary/10 text-primary"
                           : "bg-muted text-muted-foreground"
@@ -598,21 +598,22 @@ export default function SellerDashboard() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8 sm:h-9 sm:w-9"
                     onClick={() => handleEdit(product)}
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8 sm:h-9 sm:w-9 text-destructive hover:text-destructive"
                     onClick={() => handleDelete(product.id)}
-                    className="text-destructive hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>

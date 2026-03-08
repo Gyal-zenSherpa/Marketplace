@@ -61,11 +61,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Authenticated user: ${claimsData.claims.sub}`);
+    const callerUserId = claimsData.claims.sub as string;
+    console.log(`Authenticated user: ${callerUserId}`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify caller is an admin
+    const { data: isAdmin } = await supabase.rpc('has_role', {
+      _user_id: callerUserId,
+      _role: 'admin',
+    });
+    if (!isAdmin) {
+      console.error("Non-admin attempted to send application email");
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: admin access required' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const { userId, businessName, status, adminNotes }: ApplicationEmailRequest = await req.json();
 

@@ -30,6 +30,15 @@ interface OrderInvoiceProps {
   order: Order;
 }
 
+function esc(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 export function OrderInvoice({ order }: OrderInvoiceProps) {
   const generateInvoice = () => {
     const invoiceContent = `

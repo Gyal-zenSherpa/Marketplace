@@ -155,7 +155,7 @@ export default function Admin() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex flex-wrap w-full gap-1 h-auto max-w-5xl">
+          <TabsList className="flex flex-wrap w-full gap-1 h-auto max-w-5xl overflow-x-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Analytics</span>
             </TabsTrigger>

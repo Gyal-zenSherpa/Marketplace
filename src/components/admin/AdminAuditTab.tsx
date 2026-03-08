@@ -102,7 +102,7 @@ export function AdminAuditTab() {
                     <TableCell className="text-muted-foreground">
                       {log.resource_type ? <span>{log.resource_type}{log.resource_id && <span className="text-xs ml-1">({log.resource_id.slice(0, 8)}...)</span>}</span> : "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-sm">{log.ip_address || "—"}</TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground font-mono text-sm">{log.ip_address || "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{format(new Date(log.created_at), "MMM d, yyyy HH:mm:ss")}</TableCell>
                   </TableRow>
                 ))

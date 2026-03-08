@@ -131,9 +131,9 @@ export function AdminUsersTab({ currentUserId }: Props) {
                 filteredUsers.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">{u.user_id.slice(0, 8)}...</TableCell>
+                    <TableCell className="hidden md:table-cell text-xs font-mono text-muted-foreground">{u.user_id.slice(0, 8)}...</TableCell>
                     <TableCell><Badge className={ROLE_COLORS[u.role]} variant="outline">{u.role}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{format(new Date(u.created_at), "MMM d, yyyy")}</TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">{format(new Date(u.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell className="text-right">
                       <Select value={u.role} onValueChange={(value: AppRole) => updateUserRole(u.user_id, value)} disabled={u.user_id === currentUserId}>
                         <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>

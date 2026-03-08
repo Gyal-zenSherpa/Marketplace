@@ -357,7 +357,7 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-semibold mb-2">Payment Method</h4>
                   <Badge variant="outline">{selectedOrder.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}</Badge>

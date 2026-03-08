@@ -100,7 +100,7 @@ export function OrderInvoice({ order }: OrderInvoiceProps) {
         .map(
           (item) => `
         <tr>
-          <td>${item.product_name}</td>
+          <td>${esc(item.product_name)}</td>
           <td style="text-align: center;">${item.quantity}</td>
           <td style="text-align: right;">${formatNepaliPrice(item.product_price)}</td>
           <td style="text-align: right;">${formatNepaliPrice(item.product_price * item.quantity)}</td>

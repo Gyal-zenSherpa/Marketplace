@@ -92,15 +92,15 @@ export function AdminUsersTab({ currentUserId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <CardTitle>User Management</CardTitle>
             <CardDescription>Manage user accounts and assign roles</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9 w-64" />
+              <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9 w-full md:w-64" />
             </div>
             <Button variant="outline" size="icon" onClick={fetchUsers} disabled={usersLoading}>
               <RefreshCw className={`h-4 w-4 ${usersLoading ? "animate-spin" : ""}`} />

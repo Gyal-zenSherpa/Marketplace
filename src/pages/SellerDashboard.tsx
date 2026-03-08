@@ -332,10 +332,10 @@ export default function SellerDashboard() {
           Back to Marketplace
         </button>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Seller Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Seller Dashboard</h1>
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">
               Manage your product listings & commissions
             </p>
           </div>
@@ -571,12 +571,12 @@ export default function SellerDashboard() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-card rounded-xl shadow-card p-4 flex items-center gap-4"
+                className="bg-card rounded-xl shadow-card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
               >
                 <img
                   src={product.image || "https://via.placeholder.com/80"}
                   alt={product.name}
-                  className="h-20 w-20 rounded-lg object-cover"
+                  className="h-20 w-20 rounded-lg object-cover shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground truncate">
@@ -598,7 +598,7 @@ export default function SellerDashboard() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-center">
                   <Button
                     variant="ghost"
                     size="icon"

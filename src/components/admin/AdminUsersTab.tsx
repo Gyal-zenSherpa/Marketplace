@@ -92,15 +92,15 @@ export function AdminUsersTab({ currentUserId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <CardTitle>User Management</CardTitle>
             <CardDescription>Manage user accounts and assign roles</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9 w-64" />
+              <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-9 w-full md:w-64" />
             </div>
             <Button variant="outline" size="icon" onClick={fetchUsers} disabled={usersLoading}>
               <RefreshCw className={`h-4 w-4 ${usersLoading ? "animate-spin" : ""}`} />
@@ -114,9 +114,9 @@ export function AdminUsersTab({ currentUserId }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
-                <TableHead>User ID</TableHead>
+                <TableHead className="hidden md:table-cell">User ID</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead className="hidden md:table-cell">Joined</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -131,9 +131,9 @@ export function AdminUsersTab({ currentUserId }: Props) {
                 filteredUsers.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">{u.user_id.slice(0, 8)}...</TableCell>
+                    <TableCell className="hidden md:table-cell text-xs font-mono text-muted-foreground">{u.user_id.slice(0, 8)}...</TableCell>
                     <TableCell><Badge className={ROLE_COLORS[u.role]} variant="outline">{u.role}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{format(new Date(u.created_at), "MMM d, yyyy")}</TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">{format(new Date(u.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell className="text-right">
                       <Select value={u.role} onValueChange={(value: AppRole) => updateUserRole(u.user_id, value)} disabled={u.user_id === currentUserId}>
                         <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>

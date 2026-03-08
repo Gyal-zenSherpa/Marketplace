@@ -30,6 +30,15 @@ interface OrderInvoiceProps {
   order: Order;
 }
 
+function esc(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 export function OrderInvoice({ order }: OrderInvoiceProps) {
   const generateInvoice = () => {
     const invoiceContent = `
@@ -64,16 +73,16 @@ export function OrderInvoice({ order }: OrderInvoiceProps) {
   <div class="info-section">
     <div class="info-box">
       <h3>Bill To</h3>
-      <p><strong>${order.shipping_address?.fullName || "—"}</strong></p>
-      <p>${order.shipping_address?.address || ""}</p>
-      <p>${order.shipping_address?.city || ""}, ${order.shipping_address?.state || ""} ${order.shipping_address?.zipCode || ""}</p>
-      <p>Phone: ${order.shipping_address?.phone || "—"}</p>
+      <p><strong>${esc(order.shipping_address?.fullName || "—")}</strong></p>
+      <p>${esc(order.shipping_address?.address || "")}</p>
+      <p>${esc(order.shipping_address?.city || "")}, ${esc(order.shipping_address?.state || "")} ${esc(order.shipping_address?.zipCode || "")}</p>
+      <p>Phone: ${esc(order.shipping_address?.phone || "—")}</p>
     </div>
     <div class="info-box" style="text-align: right;">
       <h3>Payment Method</h3>
       <p>${order.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}</p>
       <h3 style="margin-top: 20px;">Status</h3>
-      <p style="text-transform: capitalize;">${order.status}</p>
+      <p style="text-transform: capitalize;">${esc(order.status)}</p>
     </div>
   </div>
   
@@ -91,7 +100,7 @@ export function OrderInvoice({ order }: OrderInvoiceProps) {
         .map(
           (item) => `
         <tr>
-          <td>${item.product_name}</td>
+          <td>${esc(item.product_name)}</td>
           <td style="text-align: center;">${item.quantity}</td>
           <td style="text-align: right;">${formatNepaliPrice(item.product_price)}</td>
           <td style="text-align: right;">${formatNepaliPrice(item.product_price * item.quantity)}</td>

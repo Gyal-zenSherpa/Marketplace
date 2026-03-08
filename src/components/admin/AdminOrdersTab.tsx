@@ -239,21 +239,21 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle>Order Management</CardTitle>
               <CardDescription>View and manage customer orders</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {statusFilter && (
                 <Badge variant="secondary" className="gap-1">
                   Filtered: {statusFilter}
                   <button onClick={onClearFilter} className="ml-1 hover:text-destructive">×</button>
                 </Badge>
               )}
-              <div className="relative">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search orders..." value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} className="pl-9 w-64" />
+                <Input placeholder="Search orders..." value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} className="pl-9 w-full md:w-64" />
               </div>
               <Button variant="outline" size="icon" onClick={fetchOrders} disabled={ordersLoading}>
                 <RefreshCw className={`h-4 w-4 ${ordersLoading ? "animate-spin" : ""}`} />

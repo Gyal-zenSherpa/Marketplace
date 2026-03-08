@@ -21,18 +21,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper to decode JWT and extract payload
-function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 interface ApplicationEmailRequest {
   userId: string;
   businessName: string;
@@ -43,13 +31,12 @@ interface ApplicationEmailRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-application-email function invoked");
 
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication
+    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       console.error("Missing or invalid authorization header");
@@ -59,27 +46,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const jwtToken = authHeader.replace('Bearer ', '');
-    const jwtPayload = decodeJwt(jwtToken);
-    
-    if (!jwtPayload || !jwtPayload.sub) {
-      console.error("Invalid token payload");
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("Invalid token:", claimsError);
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: 'Invalid or expired token' }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Check if token is expired
-    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
-      console.error("Token expired");
-      return new Response(
-        JSON.stringify({ error: 'Token expired' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log(`Authenticated user: ${jwtPayload.sub}`);
+    console.log(`Authenticated user: ${claimsData.claims.sub}`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -96,10 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error getting user email:", userError);
       return new Response(
         JSON.stringify({ error: "Could not find user email" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -159,10 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-application-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

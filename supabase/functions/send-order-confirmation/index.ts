@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -19,18 +20,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-// Helper to decode JWT and extract payload
-function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 interface OrderItem {
   product_name: string;
@@ -62,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Verify authentication
+    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       console.error("Missing or invalid authorization header");
@@ -72,27 +61,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const jwtToken = authHeader.replace('Bearer ', '');
-    const jwtPayload = decodeJwt(jwtToken);
-    
-    if (!jwtPayload || !jwtPayload.sub) {
-      console.error("Invalid token payload");
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("Invalid token:", claimsError);
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: 'Invalid or expired token' }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Check if token is expired
-    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
-      console.error("Token expired");
-      return new Response(
-        JSON.stringify({ error: 'Token expired' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log(`Authenticated user: ${jwtPayload.sub}`);
+    console.log(`Authenticated user: ${claimsData.claims.sub}`);
 
     const {
       orderId,
@@ -128,19 +112,14 @@ const handler = async (req: Request): Promise<Response> => {
       </head>
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-          <!-- Header -->
           <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 Order Confirmed!</h1>
             <p style="color: #fecaca; margin: 10px 0 0 0;">Thank you for your purchase, ${escapeHtml(userName || 'Valued Customer')}!</p>
           </div>
-
-          <!-- Order Details -->
           <div style="padding: 30px;">
             <div style="background-color: #fef2f2; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
               <p style="margin: 0; color: #991b1b; font-weight: 600;">Order ID: #${orderId.slice(0, 8).toUpperCase()}</p>
             </div>
-
-            <!-- Items Table -->
             <h2 style="color: #1f2937; font-size: 18px; margin-bottom: 15px;">Order Summary</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
               <thead>
@@ -151,9 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <th style="padding: 12px; text-align: right; font-weight: 600; color: #374151;">Total</th>
                 </tr>
               </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
+              <tbody>${itemsHtml}</tbody>
               <tfoot>
                 <tr>
                   <td colspan="3" style="padding: 15px 12px; text-align: right; font-weight: 700; color: #1f2937; font-size: 18px;">Grand Total:</td>
@@ -161,8 +138,6 @@ const handler = async (req: Request): Promise<Response> => {
                 </tr>
               </tfoot>
             </table>
-
-            <!-- Shipping Address -->
             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
               <div style="flex: 1; min-width: 200px; background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
                 <h3 style="color: #374151; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase;">Shipping Address</h3>
@@ -178,8 +153,6 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="margin: 0; color: #1f2937;">${paymentMethod === 'cod' ? '💵 Cash on Delivery' : '📱 Online Payment'}</p>
               </div>
             </div>
-
-            <!-- Next Steps -->
             <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 0 8px 8px 0; margin-top: 25px;">
               <h3 style="color: #065f46; margin: 0 0 10px 0;">What's Next?</h3>
               <ul style="margin: 0; padding-left: 20px; color: #047857;">
@@ -189,8 +162,6 @@ const handler = async (req: Request): Promise<Response> => {
               </ul>
             </div>
           </div>
-
-          <!-- Footer -->
           <div style="background-color: #1f2937; padding: 25px; text-align: center;">
             <p style="color: #9ca3af; margin: 0 0 10px 0; font-size: 14px;">Questions? Contact us at</p>
             <p style="margin: 0;">
@@ -198,9 +169,7 @@ const handler = async (req: Request): Promise<Response> => {
               <span style="color: #6b7280;"> | </span>
               <a href="tel:9763689295" style="color: #fbbf24; text-decoration: none;">9763689295</a>
             </p>
-            <p style="color: #6b7280; margin: 15px 0 0 0; font-size: 12px;">
-              © 2024-2026 Marketplace Nepal Pvt. Ltd. All Rights Reserved.
-            </p>
+            <p style="color: #6b7280; margin: 15px 0 0 0; font-size: 12px;">© 2024-2026 Marketplace Nepal Pvt. Ltd. All Rights Reserved.</p>
           </div>
         </div>
       </body>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -8,18 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-// Helper to decode JWT and extract payload
-function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 interface OrderStatusEmailRequest {
   orderId: string;
@@ -32,46 +21,19 @@ interface OrderStatusEmailRequest {
 }
 
 const getStatusEmoji = (status: string) => {
-  switch (status) {
-    case "approved":
-      return "✅";
-    case "cancelled":
-      return "❌";
-    default:
-      return "📦";
-  }
+  switch (status) { case "approved": return "✅"; case "cancelled": return "❌"; default: return "📦"; }
 };
-
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case "approved":
-      return "#10b981";
-    case "cancelled":
-      return "#ef4444";
-    default:
-      return "#6b7280";
-  }
+  switch (status) { case "approved": return "#10b981"; case "cancelled": return "#ef4444"; default: return "#6b7280"; }
 };
-
 const getStatusTitle = (status: string) => {
-  switch (status) {
-    case "approved":
-      return "Payment Approved - Order Confirmed!";
-    case "cancelled":
-      return "Order Cancelled";
-    default:
-      return "Order Update";
-  }
+  switch (status) { case "approved": return "Payment Approved - Order Confirmed!"; case "cancelled": return "Order Cancelled"; default: return "Order Update"; }
 };
-
 const getStatusMessage = (status: string, userName: string) => {
   switch (status) {
-    case "approved":
-      return `Great news, ${userName}! Your payment has been approved and your order is now being processed. We're preparing your items for shipment.`;
-    case "cancelled":
-      return `Dear ${userName}, we regret to inform you that your order has been cancelled. If you have any questions, please contact our support team.`;
-    default:
-      return `Hello ${userName}, there's an update on your order.`;
+    case "approved": return `Great news, ${userName}! Your payment has been approved and your order is now being processed.`;
+    case "cancelled": return `Dear ${userName}, we regret to inform you that your order has been cancelled.`;
+    default: return `Hello ${userName}, there's an update on your order.`;
   }
 };
 
@@ -83,47 +45,26 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Verify authentication
+    // Verify authentication with cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      console.error("Missing or invalid authorization header");
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    const jwtToken = authHeader.replace('Bearer ', '');
-    const jwtPayload = decodeJwt(jwtToken);
-    
-    if (!jwtPayload || !jwtPayload.sub) {
-      console.error("Invalid token payload");
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    // Check if token is expired
-    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
-      console.error("Token expired");
-      return new Response(
-        JSON.stringify({ error: 'Token expired' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    console.log(`Authenticated user: ${claimsData.claims.sub}`);
 
-    console.log(`Authenticated user: ${jwtPayload.sub}`);
-
-    const {
-      orderId,
-      userEmail,
-      userName,
-      status,
-      orderTotal,
-      orderItems = [],
-      cancellationReason,
-    }: OrderStatusEmailRequest = await req.json();
+    const { orderId, userEmail, userName, status, orderTotal, orderItems = [], cancellationReason }: OrderStatusEmailRequest = await req.json();
 
     console.log(`Sending ${status} email for order ${orderId} to ${userEmail}`);
 
@@ -178,61 +119,29 @@ const handler = async (req: Request): Promise<Response> => {
     const emailHtml = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${statusTitle}</title>
-        </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${statusTitle}</title></head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f3f4f6;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
-            <tr>
-              <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                  <!-- Header -->
-                  <tr>
-                    <td style="background: linear-gradient(135deg, ${statusColor} 0%, ${statusColor}dd 100%); padding: 40px 30px; text-align: center;">
-                      <div style="font-size: 48px; margin-bottom: 16px;">${statusEmoji}</div>
-                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">${statusTitle}</h1>
-                    </td>
-                  </tr>
-                  
-                  <!-- Content -->
-                  <tr>
-                    <td style="padding: 40px 30px;">
-                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        ${statusMessage}
-                      </p>
-
-                      <!-- Order Details -->
-                      <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                        <h3 style="color: #111827; margin: 0 0 12px 0;">Order Details</h3>
-                        <p style="color: #6b7280; margin: 0;">
-                          <strong>Order ID:</strong> ${orderId.slice(0, 8).toUpperCase()}<br>
-                          <strong>Total:</strong> NPR ${orderTotal.toLocaleString()}
-                        </p>
-                      </div>
-
-                      ${itemsHtml}
-                      ${cancellationHtml}
-                      ${nextStepsHtml}
-                    </td>
-                  </tr>
-                  
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
-                        Thank you for shopping with us!
-                      </p>
-                      <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                        Marketplace Nepal Pvt. Ltd.<br>
-                        New Road, Kathmandu, Nepal
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+            <tr><td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <tr><td style="background: linear-gradient(135deg, ${statusColor} 0%, ${statusColor}dd 100%); padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 16px;">${statusEmoji}</div>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">${statusTitle}</h1>
+                </td></tr>
+                <tr><td style="padding: 40px 30px;">
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">${statusMessage}</p>
+                  <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #111827; margin: 0 0 12px 0;">Order Details</h3>
+                    <p style="color: #6b7280; margin: 0;"><strong>Order ID:</strong> ${orderId.slice(0, 8).toUpperCase()}<br><strong>Total:</strong> NPR ${orderTotal.toLocaleString()}</p>
+                  </div>
+                  ${itemsHtml}${cancellationHtml}${nextStepsHtml}
+                </td></tr>
+                <tr><td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">Thank you for shopping with us!</p>
+                  <p style="color: #9ca3af; font-size: 12px; margin: 0;">Marketplace Nepal Pvt. Ltd.<br>New Road, Kathmandu, Nepal</p>
+                </td></tr>
+              </table>
+            </td></tr>
           </table>
         </body>
       </html>
@@ -253,13 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-order-status-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
   }
 };
 

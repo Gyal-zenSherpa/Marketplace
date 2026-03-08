@@ -5,17 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper to decode JWT and extract payload
-function decodeJwt(token: string): { sub: string; email: string; exp: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 // Encryption helpers using Web Crypto API
 async function getEncryptionKey(): Promise<CryptoKey> {
@@ -203,7 +192,7 @@ Deno.serve(async (req) => {
       throw new Error('Supabase configuration is missing');
     }
 
-    // Verify authentication by decoding JWT
+    // Verify authentication using cryptographic signature verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
@@ -212,25 +201,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const jwtToken = authHeader.replace('Bearer ', '');
-    const jwtPayload = decodeJwt(jwtToken);
-    
-    if (!jwtPayload || !jwtPayload.sub) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+    const token_str = authHeader.replace('Bearer ', '');
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token_str);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Check if token is expired
-    if (jwtPayload.exp && jwtPayload.exp * 1000 < Date.now()) {
-      return new Response(JSON.stringify({ error: 'Token expired' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const user = { id: jwtPayload.sub, email: jwtPayload.email };
+    const user = { id: claimsData.claims.sub as string, email: claimsData.claims.email as string };
 
     // Use service role for database operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

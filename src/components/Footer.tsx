@@ -75,6 +75,11 @@ export function Footer() {
                   Sell on Marketplace
                 </Link>
               </li>
+              <li>
+                <Link to="/blog" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -127,6 +132,11 @@ export function Footer() {
               <li>
                 <Link to="/refund-policy" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
                   Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/disclaimer" onClick={scrollToTop} className="text-muted-foreground hover:text-primary transition-colors">
+                  Disclaimer
                 </Link>
               </li>
             </ul>

@@ -28,6 +28,9 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ReportIssue from "./pages/ReportIssue";
+import Disclaimer from "./pages/Disclaimer";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +68,9 @@ const App = () => {
                     <Route path="/about" element={<About />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/report-issue" element={<ReportIssue />} />
+                    <Route path="/disclaimer" element={<Disclaimer />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>

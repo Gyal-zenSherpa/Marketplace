@@ -315,10 +315,7 @@ export default function Auth() {
           // Send welcome email
           try {
             await supabase.functions.invoke('send-welcome-email', {
-              body: {
-                userEmail: validated.email,
-                userName: validated.fullName,
-              },
+              body: {},
             });
             console.log("Welcome email sent to:", validated.email);
           } catch (emailErr) {

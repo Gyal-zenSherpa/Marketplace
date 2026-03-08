@@ -303,7 +303,7 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="outline" size="sm" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true); }}>
                           <Eye className="h-4 w-4 mr-1" /> View

@@ -4,7 +4,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-forwarded-for, x-real-ip',
-  // Security headers
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
@@ -14,10 +13,53 @@ const corsHeaders = {
 
 // Rate limiting configuration
 const RATE_LIMITS = {
-  auth: { maxRequests: 5, windowMs: 60000 }, // 5 requests per minute for auth
-  api: { maxRequests: 100, windowMs: 60000 }, // 100 requests per minute for API
-  ai: { maxRequests: 20, windowMs: 60000 }, // 20 AI requests per minute
+  auth: { maxRequests: 5, windowMs: 60000 },
+  api: { maxRequests: 100, windowMs: 60000 },
+  ai: { maxRequests: 20, windowMs: 60000 },
 };
+
+// In-memory rate limiting for the endpoint itself to prevent abuse
+const endpointRateLimit = new Map<string, { count: number; windowStart: number }>();
+const ENDPOINT_RATE_LIMIT = { maxRequests: 10, windowMs: 60000 }; // 10 requests per minute per IP
+
+function checkEndpointRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = endpointRateLimit.get(ip);
+  
+  if (!entry || now - entry.windowStart > ENDPOINT_RATE_LIMIT.windowMs) {
+    endpointRateLimit.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  
+  if (entry.count >= ENDPOINT_RATE_LIMIT.maxRequests) {
+    return false;
+  }
+  
+  entry.count++;
+  return true;
+}
+
+/**
+ * Verify JWT and return user ID. Returns null if invalid.
+ */
+async function verifyAuth(req: Request): Promise<string | null> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data, error } = await userClient.auth.getClaims(token);
+  if (error || !data?.claims?.sub) return null;
+
+  return data.claims.sub as string;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -35,10 +77,20 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get client IP for rate limiting
+    // Get client IP
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
       || req.headers.get('x-real-ip') 
       || 'unknown';
+
+    // Rate limit the endpoint itself to prevent abuse
+    if (!checkEndpointRateLimit(clientIp)) {
+      return new Response(JSON.stringify({ 
+        error: 'Too many requests to this endpoint. Please try again later.' 
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+      });
+    }
 
     switch (action) {
       case 'check-rate-limit': {
@@ -48,7 +100,6 @@ serve(async (req) => {
         const windowStart = new Date(Date.now() - rateConfig.windowMs).toISOString();
         const rateLimitKey = identifier || clientIp;
 
-        // Check existing rate limit entries
         const { data: existingEntries, error: fetchError } = await supabase
           .from('rate_limits')
           .select('request_count')
@@ -59,14 +110,12 @@ serve(async (req) => {
 
         if (fetchError) {
           console.error('Rate limit fetch error:', fetchError);
-          // Fail open - allow request if we can't check rate limit
           return new Response(JSON.stringify({ allowed: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
         if (existingEntries && existingEntries.request_count >= rateConfig.maxRequests) {
-          console.log(`Rate limit exceeded for ${rateLimitKey} on ${endpoint}`);
           return new Response(JSON.stringify({ 
             allowed: false, 
             retryAfter: Math.ceil(rateConfig.windowMs / 1000),
@@ -81,7 +130,6 @@ serve(async (req) => {
           });
         }
 
-        // Upsert rate limit entry using service role (bypasses RLS)
         if (existingEntries) {
           try {
             await supabase
@@ -109,16 +157,25 @@ serve(async (req) => {
       }
 
       case 'track-failed-login': {
+        // Pre-auth action: validate that email is provided and use IP-based limiting
+        // The endpoint-level rate limit above already prevents abuse
         const { email, ipAddress } = data;
 
-        // Check for existing failed attempts
+        if (!email || typeof email !== 'string' || email.length > 255) {
+          return new Response(JSON.stringify({ error: 'Invalid email' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const sanitizedEmail = email.toLowerCase().trim();
+
         const { data: existing } = await supabase
           .from('failed_login_attempts')
           .select('*')
-          .eq('email', email.toLowerCase())
+          .eq('email', sanitizedEmail)
           .maybeSingle();
 
-        // Check if account is locked
         if (existing?.locked_until && new Date(existing.locked_until) > new Date()) {
           return new Response(JSON.stringify({ 
             locked: true, 
@@ -135,7 +192,6 @@ serve(async (req) => {
 
         let lockedUntil = null;
         if (newCount >= lockThreshold) {
-          // Lock for 15 minutes after 5 failed attempts
           lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         }
 
@@ -148,12 +204,12 @@ serve(async (req) => {
               ip_address: ipAddress || clientIp,
               locked_until: lockedUntil,
             })
-            .eq('email', email.toLowerCase());
+            .eq('email', sanitizedEmail);
         } else {
           await supabase
             .from('failed_login_attempts')
             .insert({
-              email: email.toLowerCase(),
+              email: sanitizedEmail,
               ip_address: ipAddress || clientIp,
               attempt_count: 1,
             });
@@ -169,12 +225,42 @@ serve(async (req) => {
       }
 
       case 'reset-failed-logins': {
+        // REQUIRES authentication — only the authenticated user can reset their own login attempts
+        const userId = await verifyAuth(req);
+        if (!userId) {
+          return new Response(JSON.stringify({ error: 'Authentication required' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
         const { email } = data;
+        if (!email || typeof email !== 'string') {
+          return new Response(JSON.stringify({ error: 'Invalid email' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Verify the authenticated user's email matches the reset request
+        const userClient = createClient(
+          SUPABASE_URL,
+          Deno.env.get('SUPABASE_ANON_KEY')!,
+          { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+        );
+        const { data: userData } = await userClient.auth.getUser();
+        
+        if (!userData?.user?.email || userData.user.email.toLowerCase() !== email.toLowerCase().trim()) {
+          return new Response(JSON.stringify({ error: 'Forbidden: email mismatch' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
 
         await supabase
           .from('failed_login_attempts')
           .delete()
-          .eq('email', email.toLowerCase());
+          .eq('email', email.toLowerCase().trim());
 
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -182,17 +268,34 @@ serve(async (req) => {
       }
 
       case 'log-security-event': {
-        const { userId, eventAction, resourceType, resourceId, metadata } = data;
+        // REQUIRES authentication — only authenticated users can log events
+        const userId = await verifyAuth(req);
+        if (!userId) {
+          return new Response(JSON.stringify({ error: 'Authentication required' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const { eventAction, resourceType, resourceId, metadata } = data;
+
+        // Validate inputs
+        if (!eventAction || typeof eventAction !== 'string' || eventAction.length > 100) {
+          return new Response(JSON.stringify({ error: 'Invalid action' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
 
         await supabase
           .from('security_audit_log')
           .insert({
-            user_id: userId,
+            user_id: userId, // Use verified user ID, not client-supplied
             action: eventAction,
-            resource_type: resourceType,
-            resource_id: resourceId,
+            resource_type: resourceType?.slice(0, 100),
+            resource_id: resourceId?.slice(0, 100),
             ip_address: clientIp,
-            user_agent: req.headers.get('user-agent'),
+            user_agent: req.headers.get('user-agent')?.slice(0, 500),
             metadata,
           });
 
@@ -202,19 +305,28 @@ serve(async (req) => {
       }
 
       case 'check-login-status': {
+        // Pre-auth action: uses endpoint-level rate limiting
         const { email } = data;
+
+        if (!email || typeof email !== 'string' || email.length > 255) {
+          return new Response(JSON.stringify({ error: 'Invalid email' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const sanitizedEmail = email.toLowerCase().trim();
 
         const { data: existing } = await supabase
           .from('failed_login_attempts')
           .select('locked_until, attempt_count')
-          .eq('email', email.toLowerCase())
+          .eq('email', sanitizedEmail)
           .maybeSingle();
 
         if (existing?.locked_until && new Date(existing.locked_until) > new Date()) {
           return new Response(JSON.stringify({ 
             locked: true, 
             lockedUntil: existing.locked_until,
-            attemptCount: existing.attempt_count,
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -222,7 +334,6 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({ 
           locked: false,
-          attemptCount: existing?.attempt_count || 0,
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -236,8 +347,7 @@ serve(async (req) => {
     }
   } catch (error: unknown) {
     console.error('Security middleware error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -116,12 +116,32 @@ export function AdManager() {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this ad?")) return;
     try {
-      const { error, status } = await supabase.from("ads").delete().eq("id", id);
-      if (error) {
-        console.error("Ad delete error:", error.message, error.code, error.details);
-        toast.error(`Failed to delete ad: ${error.message}`);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        toast.error("No active session. Please sign in again.");
         return;
       }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-ad`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ ad_id: id }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(`Failed to delete ad: ${result?.error || response.statusText}`);
+        return;
+      }
+
       toast.success("Ad deleted");
       fetchAds();
     } catch (err: any) {

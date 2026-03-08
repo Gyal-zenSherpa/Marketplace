@@ -114,9 +114,9 @@ export function AdminUsersTab({ currentUserId }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
-                <TableHead>User ID</TableHead>
+                <TableHead className="hidden md:table-cell">User ID</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead className="hidden md:table-cell">Joined</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

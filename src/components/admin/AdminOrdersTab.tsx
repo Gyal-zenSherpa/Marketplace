@@ -288,7 +288,7 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
                       <TableCell className="font-mono text-xs">#{order.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell className="font-medium">{order.shipping_address?.fullName || "—"}</TableCell>
                       <TableCell>{formatPrice(order.total)}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Badge variant="outline" className="text-xs">
                           {order.shipping_address?.paymentMethod === "online" ? "Online" : "COD"}
                         </Badge>

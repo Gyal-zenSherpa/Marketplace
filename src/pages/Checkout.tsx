@@ -30,8 +30,8 @@ const NEPAL_PROVINCES = Object.keys(PROVINCE_DISTRICTS);
 const shippingSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
   address: z.string().trim().min(1, "Address is required").max(200),
-  city: z.string().trim().min(1, "City is required").max(100),
-  state: z.string().trim().min(1, "State is required").max(100),
+  city: z.string().trim().min(1, "District is required").max(100),
+  state: z.string().trim().min(1, "Province is required").max(100),
   zipCode: z.string().trim().min(1, "ZIP code is required").max(20),
   phone: z.string().trim().min(1, "Phone is required").max(20),
 });

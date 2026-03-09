@@ -73,6 +73,7 @@ function PaymentProofDisplay({ paymentProofPath }: { paymentProofPath: string })
 
 interface OrderItem {
   id: string;
+  product_id: string | null;
   product_name: string;
   product_price: number;
   quantity: number;

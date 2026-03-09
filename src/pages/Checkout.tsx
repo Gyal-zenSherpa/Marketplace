@@ -15,21 +15,23 @@ import { z } from "zod";
 import { formatNepaliPrice, formatNepaliNumber } from "@/lib/formatNepali";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const NEPAL_PROVINCES = [
-  "Koshi",
-  "Madhesh",
-  "Bagmati",
-  "Gandaki",
-  "Lumbini",
-  "Karnali",
-  "Sudurpashchim",
-];
+const PROVINCE_DISTRICTS: Record<string, string[]> = {
+  Koshi: ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
+  Madhesh: ["Sarlahi", "Dhanusa", "Bara", "Rautahat", "Saptari", "Siraha", "Mahottari", "Parsa"],
+  Bagmati: ["Kathmandu", "Lalitpur", "Chitwan", "Makawanpur", "Kavrepalanchok", "Dhading", "Bhaktapur", "Sindhuli", "Sindhupalchok", "Ramechhap", "Nuwakot", "Dolakha", "Rasuwa"],
+  Gandaki: ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
+  Lumbini: ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Parasi", "Palpa", "Pyuthan", "Rolpa", "Rukum", "Rupandehi"],
+  Karnali: ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum Paschim", "Salyan", "Surkhet"],
+  Sudurpashchim: ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"],
+};
+
+const NEPAL_PROVINCES = Object.keys(PROVINCE_DISTRICTS);
 
 const shippingSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
   address: z.string().trim().min(1, "Address is required").max(200),
-  city: z.string().trim().min(1, "City is required").max(100),
-  state: z.string().trim().min(1, "State is required").max(100),
+  city: z.string().trim().min(1, "District is required").max(100),
+  state: z.string().trim().min(1, "Province is required").max(100),
   zipCode: z.string().trim().min(1, "ZIP code is required").max(20),
   phone: z.string().trim().min(1, "Phone is required").max(20),
 });
@@ -427,14 +429,10 @@ export default function Checkout() {
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" name="city" value={formData.city} onChange={handleInputChange} required />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="state">Province</Label>
                   <Select
                     value={formData.state}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, state: value, city: "" }))}
                   >
                     <SelectTrigger id="state">
                       <SelectValue placeholder="Select Province" />
@@ -443,6 +441,25 @@ export default function Checkout() {
                       {NEPAL_PROVINCES.map((province) => (
                         <SelectItem key={province} value={province}>
                           {province}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">District</Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, city: value }))}
+                    disabled={!formData.state}
+                  >
+                    <SelectTrigger id="city">
+                      <SelectValue placeholder={formData.state ? "Select District" : "Select Province first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formData.state && PROVINCE_DISTRICTS[formData.state]?.map((district) => (
+                        <SelectItem key={district} value={district}>
+                          {district}
                         </SelectItem>
                       ))}
                     </SelectContent>

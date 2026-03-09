@@ -130,6 +130,7 @@ export default function Orders() {
           payment_proof_url,
           order_items (
             id,
+            product_id,
             product_name,
             product_price,
             quantity
@@ -140,6 +141,20 @@ export default function Orders() {
 
       if (!error && data) {
         setOrders(data as Order[]);
+
+        // Check which products the user has already reviewed
+        const deliveredProductIds = (data as Order[])
+          .filter((o) => o.status === "delivered")
+          .flatMap((o) => o.order_items.map((i) => i.product_id).filter(Boolean) as string[]);
+
+        if (deliveredProductIds.length > 0) {
+          const { data: reviews } = await supabase
+            .from("product_reviews")
+            .select("product_id")
+            .eq("user_id", user.id)
+            .in("product_id", deliveredProductIds);
+          setReviewedProductIds(new Set(reviews?.map((r) => r.product_id) || []));
+        }
       }
       setLoading(false);
     };

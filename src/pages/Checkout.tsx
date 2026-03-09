@@ -429,14 +429,10 @@ export default function Checkout() {
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" name="city" value={formData.city} onChange={handleInputChange} required />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="state">Province</Label>
                   <Select
                     value={formData.state}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, state: value, city: "" }))}
                   >
                     <SelectTrigger id="state">
                       <SelectValue placeholder="Select Province" />
@@ -445,6 +441,25 @@ export default function Checkout() {
                       {NEPAL_PROVINCES.map((province) => (
                         <SelectItem key={province} value={province}>
                           {province}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">District</Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, city: value }))}
+                    disabled={!formData.state}
+                  >
+                    <SelectTrigger id="city">
+                      <SelectValue placeholder={formData.state ? "Select District" : "Select Province first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formData.state && PROVINCE_DISTRICTS[formData.state]?.map((district) => (
+                        <SelectItem key={district} value={district}>
+                          {district}
                         </SelectItem>
                       ))}
                     </SelectContent>

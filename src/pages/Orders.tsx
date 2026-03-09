@@ -348,7 +348,29 @@ export default function Orders() {
                         <p className="font-medium">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold">{formatPrice(item.product_price * item.quantity)}</p>
+                      <div className="flex items-center gap-3">
+                        <p className="font-semibold">{formatPrice(item.product_price * item.quantity)}</p>
+                        {selectedOrder.status === "delivered" && item.product_id && !reviewedProductIds.has(item.product_id) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                            onClick={() => {
+                              setDetailOpen(false);
+                              navigate(`/product/${item.product_id}`);
+                            }}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            Review
+                          </Button>
+                        )}
+                        {selectedOrder.status === "delivered" && item.product_id && reviewedProductIds.has(item.product_id) && (
+                          <Badge variant="secondary" className="text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Reviewed
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

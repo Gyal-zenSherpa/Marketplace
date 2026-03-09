@@ -344,17 +344,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               </div>
             </div>
 
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Review Title</label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Summarize your experience"
-                maxLength={100}
-              />
-            </div>
-
             {/* Content */}
             <div>
               <label className="block text-sm font-medium mb-2">Your Review</label>

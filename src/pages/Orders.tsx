@@ -269,13 +269,31 @@ export default function Orders() {
                             {order.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button variant="outline" size="sm" onClick={() => openOrderDetail(order)}>
                             <Eye className="h-4 w-4 mr-1" />
                             <span className="hidden sm:inline">View Details</span>
                             <span className="sm:hidden">View</span>
                           </Button>
                           <OrderInvoice order={order} />
+                          {order.status === "delivered" && order.order_items.some(
+                            (item) => item.product_id && !reviewedProductIds.has(item.product_id)
+                          ) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                              onClick={() => {
+                                const unreviewed = order.order_items.find(
+                                  (item) => item.product_id && !reviewedProductIds.has(item.product_id)
+                                );
+                                if (unreviewed?.product_id) navigate(`/product/${unreviewed.product_id}`);
+                              }}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Review
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

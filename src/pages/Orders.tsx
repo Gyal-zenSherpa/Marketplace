@@ -110,6 +110,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) {

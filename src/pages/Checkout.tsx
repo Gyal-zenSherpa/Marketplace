@@ -15,15 +15,17 @@ import { z } from "zod";
 import { formatNepaliPrice, formatNepaliNumber } from "@/lib/formatNepali";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const NEPAL_PROVINCES = [
-  "Koshi",
-  "Madhesh",
-  "Bagmati",
-  "Gandaki",
-  "Lumbini",
-  "Karnali",
-  "Sudurpashchim",
-];
+const PROVINCE_DISTRICTS: Record<string, string[]> = {
+  Koshi: ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Terhathum", "Udayapur"],
+  Madhesh: ["Sarlahi", "Dhanusa", "Bara", "Rautahat", "Saptari", "Siraha", "Mahottari", "Parsa"],
+  Bagmati: ["Kathmandu", "Lalitpur", "Chitwan", "Makawanpur", "Kavrepalanchok", "Dhading", "Bhaktapur", "Sindhuli", "Sindhupalchok", "Ramechhap", "Nuwakot", "Dolakha", "Rasuwa"],
+  Gandaki: ["Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", "Nawalpur", "Parbat", "Syangja", "Tanahun"],
+  Lumbini: ["Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Parasi", "Palpa", "Pyuthan", "Rolpa", "Rukum", "Rupandehi"],
+  Karnali: ["Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", "Rukum Paschim", "Salyan", "Surkhet"],
+  Sudurpashchim: ["Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", "Doti", "Kailali", "Kanchanpur"],
+};
+
+const NEPAL_PROVINCES = Object.keys(PROVINCE_DISTRICTS);
 
 const shippingSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye, MapPin, Phone, User, CreditCard, Banknote } from "lucide-react";
+import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye, MapPin, Phone, User, CreditCard, Banknote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +73,7 @@ function PaymentProofDisplay({ paymentProofPath }: { paymentProofPath: string })
 
 interface OrderItem {
   id: string;
+  product_id: string | null;
   product_name: string;
   product_price: number;
   quantity: number;
@@ -109,6 +110,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) {
@@ -128,6 +130,7 @@ export default function Orders() {
           payment_proof_url,
           order_items (
             id,
+            product_id,
             product_name,
             product_price,
             quantity
@@ -138,6 +141,20 @@ export default function Orders() {
 
       if (!error && data) {
         setOrders(data as Order[]);
+
+        // Check which products the user has already reviewed
+        const deliveredProductIds = (data as Order[])
+          .filter((o) => o.status === "delivered")
+          .flatMap((o) => o.order_items.map((i) => i.product_id).filter(Boolean) as string[]);
+
+        if (deliveredProductIds.length > 0) {
+          const { data: reviews } = await supabase
+            .from("product_reviews")
+            .select("product_id")
+            .eq("user_id", user.id)
+            .in("product_id", deliveredProductIds);
+          setReviewedProductIds(new Set(reviews?.map((r) => r.product_id) || []));
+        }
       }
       setLoading(false);
     };
@@ -252,13 +269,31 @@ export default function Orders() {
                             {order.shipping_address?.paymentMethod === "online" ? "Online Payment" : "Cash on Delivery"}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button variant="outline" size="sm" onClick={() => openOrderDetail(order)}>
                             <Eye className="h-4 w-4 mr-1" />
                             <span className="hidden sm:inline">View Details</span>
                             <span className="sm:hidden">View</span>
                           </Button>
                           <OrderInvoice order={order} />
+                          {order.status === "delivered" && order.order_items.some(
+                            (item) => item.product_id && !reviewedProductIds.has(item.product_id)
+                          ) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                              onClick={() => {
+                                const unreviewed = order.order_items.find(
+                                  (item) => item.product_id && !reviewedProductIds.has(item.product_id)
+                                );
+                                if (unreviewed?.product_id) navigate(`/product/${unreviewed.product_id}`);
+                              }}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Review
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -313,7 +348,29 @@ export default function Orders() {
                         <p className="font-medium">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold">{formatPrice(item.product_price * item.quantity)}</p>
+                      <div className="flex items-center gap-3">
+                        <p className="font-semibold">{formatPrice(item.product_price * item.quantity)}</p>
+                        {selectedOrder.status === "delivered" && item.product_id && !reviewedProductIds.has(item.product_id) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                            onClick={() => {
+                              setDetailOpen(false);
+                              navigate(`/product/${item.product_id}`);
+                            }}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            Review
+                          </Button>
+                        )}
+                        {selectedOrder.status === "delivered" && item.product_id && reviewedProductIds.has(item.product_id) && (
+                          <Badge variant="secondary" className="text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Reviewed
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

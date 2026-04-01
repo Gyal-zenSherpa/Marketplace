@@ -676,5 +676,912 @@ Purchase from verified sellers on Marketplace Nepal for:
     date: "2026-01-05",
     readTime: "7 min read",
     image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=400&fit=crop"
+  },
+  {
+    id: "13",
+    title: "How to Start a Small Business Online in Nepal: A Complete Roadmap",
+    slug: "start-small-business-online-nepal",
+    excerpt: "From registering your business to making your first sale — a practical, step-by-step guide for aspiring Nepali entrepreneurs going digital.",
+    content: `
+Starting an online business in Nepal has never been more accessible. Whether you're a student, a homemaker, or a professional looking for a side income, this guide walks you through every step.
+
+## Why Go Online?
+
+Nepal's digital economy is booming. With over 20 million internet users and growing digital payment adoption, the barriers to online selling have dropped dramatically. You can reach customers across all 77 districts without a physical store.
+
+## Step 1: Identify Your Niche
+
+Successful online businesses solve a specific problem. Consider:
+- **Handmade crafts**: Nepali handicrafts have international appeal
+- **Reselling**: Source affordable products and sell at competitive margins
+- **Digital services**: Graphic design, tutoring, consulting
+- **Food products**: Packaged spices, teas, dried fruits
+
+Research demand using social media groups and marketplace search trends.
+
+## Step 2: Register Your Business
+
+While micro-businesses can start informally, registering gives you credibility:
+- Obtain a PAN (Permanent Account Number) from the IRD
+- Register at your local ward office for smaller ventures
+- Consider a sole proprietorship for simplicity
+
+## Step 3: Set Up Your Online Presence
+
+- **Marketplace Nepal**: The fastest route — create a seller account and list products within hours
+- **Social Media**: Use Facebook and Instagram to build a following
+- **WhatsApp Business**: Great for direct customer communication
+
+## Step 4: Product Photography & Descriptions
+
+Your product photos are your storefront. Tips:
+- Use natural daylight
+- Shoot from multiple angles
+- Keep backgrounds clean and simple
+- Write detailed, honest descriptions including dimensions, materials, and care instructions
+
+## Step 5: Pricing Strategy
+
+- Calculate all costs: materials, packaging, shipping, platform fees
+- Research competitor pricing
+- Start with competitive pricing to build reviews, then adjust
+- Offer bundle deals to increase average order value
+
+## Step 6: Fulfillment & Shipping
+
+- Partner with local courier services for reliable delivery
+- Invest in quality packaging — first impressions matter
+- Offer tracking information to build buyer confidence
+- Consider free shipping thresholds to encourage larger orders
+
+## Step 7: Customer Service
+
+- Respond to inquiries within 2 hours
+- Handle complaints professionally and promptly
+- Follow up after delivery to encourage reviews
+- Build a WhatsApp broadcast list for repeat customers
+
+## Common Mistakes to Avoid
+
+1. Starting too broad — focus on a niche first
+2. Ignoring product photography quality
+3. Underpricing to the point of unsustainability
+4. Not tracking expenses and profits
+5. Neglecting customer communication
+
+## Growing Beyond the First Sale
+
+Once you have traction, reinvest in inventory, explore new product lines, and leverage your reviews and ratings to attract more buyers. Marketplace Nepal's seller dashboard provides analytics to help you make data-driven decisions.
+    `,
+    category: "Seller Guide",
+    author: "Marketplace Team",
+    date: "2026-03-05",
+    readTime: "8 min read",
+    image: "https://images.unsplash.com/photo-1664575196412-ed801e8333a1?w=800&h=400&fit=crop"
+  },
+  {
+    id: "14",
+    title: "Essential Laptop Accessories Every Student in Nepal Needs",
+    slug: "essential-laptop-accessories-students-nepal",
+    excerpt: "Boost your productivity and protect your investment with these must-have laptop accessories available on Marketplace Nepal.",
+    content: `
+Whether you just bought your first laptop for college or you're upgrading your workspace, the right accessories can transform your experience. Here are the essentials every Nepali student should consider.
+
+## 1. Laptop Bag or Sleeve
+
+Nepal's weather and commutes can be rough on electronics. A quality padded laptop sleeve or backpack is non-negotiable. Look for:
+- Water-resistant material (essential for monsoon season)
+- Adequate padding on all sides
+- Separate compartments for chargers and notes
+
+## 2. External Mouse
+
+The trackpad works in a pinch, but an external mouse dramatically improves productivity:
+- **Wireless mice**: Clean desk, no cable hassles
+- **Ergonomic options**: Prevent wrist strain during long study sessions
+- Budget picks start under NPR 500 from verified sellers
+
+## 3. Cooling Pad
+
+Nepal's load-shedding legacy means many students use laptops for extended hours. A cooling pad prevents overheating, extends laptop life, and improves performance during demanding tasks like video editing or programming.
+
+## 4. USB Hub
+
+Modern laptops often have limited ports. A USB hub (preferably USB-C with pass-through charging) lets you connect:
+- External drives
+- Mouse and keyboard
+- Phone charging cables
+- Ethernet adapters for stable internet
+
+## 5. Screen Protector & Keyboard Cover
+
+Dust is a persistent issue in many Nepali cities. A keyboard silicone cover keeps debris out, while a matte screen protector reduces glare for outdoor or brightly lit study spaces.
+
+## 6. External Hard Drive or SSD
+
+Cloud storage requires reliable internet. An external SSD provides:
+- Fast backup for assignments and projects
+- Portable storage for large files (videos, design projects)
+- Peace of mind against data loss
+
+## 7. Headphones with Microphone
+
+Essential for online classes, video calls, and focused study:
+- Over-ear headphones for noise isolation
+- In-ear options for portability
+- Ensure a decent microphone for clear communication
+
+## 8. Portable Charger / Power Bank (Laptop-Compatible)
+
+For students who study in cafés or during travel, a laptop-compatible power bank ensures you're never caught without battery. Look for 20,000mAh+ capacity with USB-C PD support.
+
+## Budget-Friendly Shopping Tips
+
+- Compare prices across multiple sellers on Marketplace Nepal
+- Watch for student discount promotions
+- Buy bundles when available (mouse + pad combos)
+- Read reviews from other students for real-world feedback
+- Use loyalty points to offset costs
+
+## Where to Shop
+
+All these accessories are available from verified sellers on Marketplace Nepal with buyer protection and competitive pricing.
+    `,
+    category: "Buying Guide",
+    author: "Marketplace Team",
+    date: "2026-03-08",
+    readTime: "6 min read",
+    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&h=400&fit=crop"
+  },
+  {
+    id: "15",
+    title: "Understanding Consumer Rights When Shopping Online in Nepal",
+    slug: "consumer-rights-online-shopping-nepal",
+    excerpt: "Know your rights as an online shopper in Nepal. Learn what protections exist, how to file complaints, and what sellers owe you.",
+    content: `
+Online shopping is convenient, but knowing your rights ensures you're protected when things go wrong. Here's what every Nepali consumer should know.
+
+## Your Basic Rights
+
+### Right to Information
+Sellers must provide accurate product descriptions, pricing (including all fees), and delivery timelines. Hidden charges after checkout are unacceptable.
+
+### Right to Quality
+Products must match their descriptions. If you receive a product that differs significantly from what was listed, you have grounds for a return or refund.
+
+### Right to Safety
+Products must meet basic safety standards. Electronics should carry appropriate certifications, and consumables must display expiry dates and ingredients.
+
+### Right to Redress
+If a product is defective or not as described, you're entitled to a replacement, repair, or refund depending on the circumstances.
+
+## What the Law Says
+
+Nepal's Consumer Protection Act 2054 (1998) provides a framework, though specific e-commerce regulations are still developing. Key points:
+- Sellers cannot provide misleading information
+- Defective products must be replaced or refunded
+- Consumers can file complaints with the Department of Commerce
+
+## Marketplace Nepal's Buyer Protection
+
+Our platform goes beyond the legal minimum:
+- **Verified Sellers**: All sellers undergo identity verification
+- **Return Window**: Products can be returned within the specified period
+- **Payment Protection**: Your payment is secured until you confirm receipt
+- **Dispute Resolution**: Our team mediates buyer-seller disputes
+
+## How to File a Complaint
+
+### On the Platform
+1. Go to your order history
+2. Select the problematic order
+3. Click "Report Issue" and describe the problem
+4. Attach photos or evidence
+5. Our team responds within 24 hours
+
+### Outside the Platform
+- Contact the Department of Commerce
+- File a complaint with the Consumer Forum Nepal
+- Seek mediation through local consumer rights organizations
+
+## Red Flags That Violate Your Rights
+
+- Seller refuses to honor listed return policy
+- Product received is fundamentally different from the listing
+- Hidden fees added after purchase
+- No response to legitimate complaints within 48 hours
+- Seller asks you to cancel the formal complaint in exchange for a partial refund
+
+## Tips for Protecting Yourself
+
+1. Always screenshot product listings before purchasing
+2. Keep all communication within the platform
+3. Save delivery receipts and unboxing photos
+4. Report issues immediately — don't wait
+5. Leave honest reviews to help other consumers
+
+## Conclusion
+
+An informed consumer is a protected consumer. Know your rights, shop with verified sellers, and don't hesitate to speak up when something isn't right.
+    `,
+    category: "Safety",
+    author: "Marketplace Team",
+    date: "2026-03-12",
+    readTime: "7 min read",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop"
+  },
+  {
+    id: "16",
+    title: "Monsoon-Proof Your Life: Essential Products for Nepal's Rainy Season",
+    slug: "monsoon-essentials-nepal",
+    excerpt: "Prepare for Nepal's monsoon season with these essential products — from waterproof bags to home humidity solutions.",
+    content: `
+Nepal's monsoon season (June–September) brings heavy rainfall, humidity, and unique challenges. Here's your complete guide to staying prepared.
+
+## Outdoor Essentials
+
+### Waterproof Bags & Covers
+- Waterproof backpack covers to protect laptops and books
+- Dry bags for trekkers and commuters
+- Waterproof phone pouches for everyday use
+
+### Footwear
+- Waterproof trekking shoes for outdoor commutes
+- Quick-dry sandals for casual use
+- Gumboots for heavy-rain areas
+- Anti-slip shoe grips
+
+### Umbrellas & Raincoats
+- Compact folding umbrellas that fit in your bag
+- Full-length raincoats for bike and scooter riders
+- Poncho-style options for trekking
+
+## Home Essentials
+
+### Humidity Control
+Monsoon humidity can damage clothes, books, and electronics:
+- Moisture absorbers (silica gel packs, calcium chloride containers)
+- Dehumidifiers for rooms with electronics or wardrobes
+- Airtight storage containers for important documents
+
+### Drying Solutions
+- Indoor drying racks (clothes take longer to dry)
+- Portable electric dryers
+- Shoe dryers to prevent fungal growth
+
+### Home Protection
+- Door draft stoppers to prevent water seepage
+- Waterproof covers for balcony furniture
+- Mold-removal sprays for bathrooms and kitchens
+
+## Health & Wellness
+
+The monsoon season brings specific health concerns:
+- Mosquito repellents and nets (dengue risk increases)
+- Water purification solutions
+- First-aid kits with antifungal creams
+- Vitamin D supplements (less sunlight during monsoon)
+
+## Electronics Protection
+
+- Surge protectors for power fluctuations during storms
+- Waterproof cases for cameras and phones
+- Silica gel packs in storage areas for gadgets
+
+## Vehicle Care
+
+- Quality windshield wipers
+- Anti-fog sprays for helmets and windshields
+- Waterproof seat covers for motorcycles
+
+## Shopping Tips for Monsoon Prep
+
+1. Stock up BEFORE the season starts — prices rise during peak demand
+2. Look for combo deals on monsoon essentials
+3. Read reviews from previous monsoon buyers
+4. Check delivery reliability during heavy rain periods
+5. Use Marketplace Nepal's wishlist to track price drops
+
+Start your monsoon shopping early on Marketplace Nepal for the best selection and prices!
+    `,
+    category: "Lifestyle",
+    author: "Marketplace Team",
+    date: "2026-03-15",
+    readTime: "6 min read",
+    image: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&h=400&fit=crop"
+  },
+  {
+    id: "17",
+    title: "Product Photography Tips for Sellers: Sell More with Better Photos",
+    slug: "product-photography-tips-sellers",
+    excerpt: "Learn how to take professional-looking product photos with just your smartphone. A practical guide for Marketplace Nepal sellers.",
+    content: `
+Great product photos are the single biggest factor in online sales. The good news? You don't need expensive equipment — your smartphone and some simple techniques can produce stunning results.
+
+## Why Photos Matter
+
+- Listings with high-quality photos get 3x more views
+- Good images reduce returns (buyers know what to expect)
+- Professional photos build trust and credibility
+- Multiple angles answer buyer questions before they ask
+
+## Setting Up Your Shooting Space
+
+### Lighting
+Natural light is your best friend:
+- Shoot near a large window during daytime
+- Avoid direct harsh sunlight — diffused light is ideal
+- Use a white bedsheet as a diffuser if light is too harsh
+- Overcast days actually provide the most even lighting
+
+### Background
+- Use a plain white or light grey background
+- A large white poster board works perfectly
+- For lifestyle shots, use clean, uncluttered settings
+- Avoid busy backgrounds that distract from the product
+
+### DIY Lightbox
+For small products, create a simple lightbox:
+1. Cut three sides of a cardboard box
+2. Cover openings with white tissue paper
+3. Place a white paper sweep inside
+4. Use a desk lamp on each side
+
+## Shooting Techniques
+
+### Angles to Capture
+- **Front view**: The primary listing photo
+- **Side views**: Show depth and profile
+- **Top-down**: Great for flat items like clothing
+- **Detail shots**: Close-ups of texture, labels, or unique features
+- **Scale reference**: Include a common object for size reference
+
+### Smartphone Settings
+- Clean your camera lens (seriously, it makes a huge difference)
+- Use the rear camera, not the front camera
+- Enable grid lines for better composition
+- Avoid using zoom — move closer instead
+- Lock focus and exposure by long-pressing the screen
+
+### Composition Rules
+- Center the product in the frame
+- Leave some breathing room around the edges
+- Use the rule of thirds for lifestyle shots
+- Keep the camera steady — use a tripod or stack of books
+
+## Editing (Free Tools)
+
+- **Snapseed** (free): Professional-level editing on mobile
+- **Lightroom Mobile** (free tier): Excellent for color correction
+- Increase brightness slightly
+- Boost contrast for definition
+- Adjust white balance if colors look off
+- Crop to a consistent aspect ratio for all products
+
+## Common Mistakes to Avoid
+
+1. Using flash — it creates harsh shadows and washes out colors
+2. Cluttered backgrounds that compete with the product
+3. Inconsistent photo styles across listings
+4. Over-filtering or unrealistic color editing
+5. Not showing the product in use (lifestyle context helps)
+6. Blurry images from shaky hands
+
+## Upload Checklist
+
+Before listing on Marketplace Nepal:
+- Minimum 3 photos per product (front, side, detail)
+- Consistent size and aspect ratio
+- True-to-life colors
+- At least one lifestyle/context photo
+- File size optimized for fast loading
+
+Better photos mean more sales. Invest the time — it pays off!
+    `,
+    category: "Seller Guide",
+    author: "Marketplace Team",
+    date: "2026-03-18",
+    readTime: "7 min read",
+    image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&h=400&fit=crop"
+  },
+  {
+    id: "18",
+    title: "The Ultimate Guide to Buying Skincare Products Online in Nepal",
+    slug: "skincare-buying-guide-nepal",
+    excerpt: "Navigate the world of skincare shopping online — how to verify authenticity, choose the right products for your skin type, and avoid counterfeits.",
+    content: `
+Nepal's skincare market is exploding with both international brands and local formulations. Here's how to shop smart for your skin.
+
+## Know Your Skin Type First
+
+Before buying any product, identify your skin type:
+- **Oily**: Shiny T-zone, enlarged pores, prone to acne
+- **Dry**: Tight feeling, flaky patches, dull appearance
+- **Combination**: Oily T-zone, dry cheeks
+- **Sensitive**: Easily irritated, redness-prone, reacts to new products
+- **Normal**: Balanced, minimal issues
+
+## Building a Basic Routine
+
+Start simple before adding specialty products:
+
+### Morning Routine
+1. Gentle cleanser
+2. Toner (optional)
+3. Moisturizer
+4. Sunscreen (SPF 30+ — essential in Nepal's altitude)
+
+### Night Routine
+1. Double cleanse (oil-based then water-based)
+2. Treatment products (serums, actives)
+3. Moisturizer
+
+## How to Verify Authenticity Online
+
+Counterfeit skincare is a serious concern — fake products can harm your skin:
+
+### Check the Seller
+- Buy from verified sellers on Marketplace Nepal
+- Look for authorized retailer badges
+- Read seller reviews specifically mentioning product authenticity
+
+### Inspect the Product
+- Check batch numbers and manufacturing dates
+- Verify the product on the brand's official website
+- Compare packaging details with authentic references
+- Be suspicious of prices significantly below retail
+
+### Red Flags
+- No manufacturing or expiry date visible
+- Spelling errors on packaging
+- Unusually cheap pricing
+- Seller cannot provide purchase receipts or authorization
+
+## Popular Categories in Nepal
+
+### Sunscreen
+Nepal's high altitude means stronger UV exposure:
+- SPF 30 minimum for daily use
+- SPF 50+ for trekking and outdoor activities
+- Water-resistant formulas for monsoon season
+
+### Moisturizers
+Nepal's climate varies dramatically by region:
+- Lightweight gel moisturizers for Terai's humidity
+- Rich cream formulas for Himalayan cold and dryness
+- Year-round hydration is key regardless of location
+
+### Local & Ayurvedic Products
+Nepal has a rich tradition of natural skincare:
+- Yak milk-based products
+- Himalayan herb formulations
+- Locally sourced essential oils
+- Handmade soaps with natural ingredients
+
+## Ingredients to Look For
+
+- **Hyaluronic Acid**: Deep hydration
+- **Niacinamide**: Pore minimizing, oil control
+- **Vitamin C**: Brightening, sun damage protection
+- **Retinol**: Anti-aging (start low concentration)
+- **Salicylic Acid**: Acne-fighting
+- **Centella Asiatica**: Soothing, healing
+
+## Shopping Tips
+
+1. Patch test every new product before full use
+2. Introduce one new product at a time (wait 2 weeks)
+3. Read ingredient lists, not just marketing claims
+4. Check expiry dates carefully — skincare has a shelf life
+5. Buy travel sizes first to test before committing
+
+Shop verified skincare on Marketplace Nepal with confidence. Your skin deserves the real thing.
+    `,
+    category: "Buying Guide",
+    author: "Marketplace Team",
+    date: "2026-03-20",
+    readTime: "8 min read",
+    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800&h=400&fit=crop"
+  },
+  {
+    id: "19",
+    title: "How Digital Payments Are Changing Shopping in Nepal",
+    slug: "digital-payments-changing-nepal",
+    excerpt: "From eSewa to Khalti and QR codes — explore how Nepal's digital payment revolution is reshaping the way we buy and sell.",
+    content: `
+Nepal's payment landscape has undergone a dramatic transformation. Digital wallets, QR codes, and mobile banking are now mainstream. Here's what this means for buyers and sellers.
+
+## The Digital Payment Boom
+
+Just five years ago, cash dominated nearly all transactions in Nepal. Today, digital payments account for a significant and growing share of commerce. Key drivers include:
+- Government push toward a cashless economy
+- COVID-19 accelerating digital adoption
+- Widespread smartphone penetration
+- Improved mobile internet infrastructure
+
+## Major Payment Platforms
+
+### eSewa
+Nepal's pioneer digital wallet:
+- Over 10 million users
+- Accepted by most online and many offline merchants
+- Utility payments, transfers, and shopping
+- Integration with bank accounts for seamless top-ups
+
+### Khalti
+Known for its user-friendly design:
+- Growing merchant network
+- Student and youth-friendly promotions
+- Easy KYC verification process
+- Strong API for merchant integration
+
+### ConnectIPS
+Bank-to-bank transfer system:
+- Direct from your bank account
+- Higher transaction limits
+- No wallet top-up needed
+- Trusted by institutional users
+
+### QR-Based Payments
+The fastest-growing segment:
+- Nepal Rastra Bank's unified QR code initiative
+- Works with any banking app
+- Simple scan-and-pay at physical stores
+- Increasingly supported by online platforms
+
+## Impact on Online Shopping
+
+### For Buyers
+- No more cash-on-delivery hassles
+- Instant payment confirmation
+- Transaction history for expense tracking
+- Cashback and loyalty rewards from payment apps
+- Secure, encrypted transactions
+
+### For Sellers
+- Faster payment collection
+- Reduced cash handling risks
+- Automated reconciliation
+- Wider customer reach (customers beyond cash zones)
+- Lower transaction costs compared to traditional banking
+
+## How Marketplace Nepal Supports Digital Payments
+
+Our platform integrates with Nepal's payment ecosystem:
+- QR code payment options for every order
+- Payment proof upload system for bank transfers
+- Secure payment verification before dispatch
+- Multiple wallet and bank transfer options
+
+## Security Best Practices
+
+1. Never share your MPIN or OTP with anyone
+2. Enable biometric authentication on payment apps
+3. Verify merchant names before confirming payment
+4. Use official app store versions only — avoid APK downloads
+5. Set transaction limits as an extra safety layer
+6. Check transaction notifications immediately
+
+## What's Next
+
+Emerging trends to watch:
+- **Interoperability**: Pay from any wallet to any merchant
+- **Cross-border payments**: Send money internationally via digital wallets
+- **Cryptocurrency regulations**: NRB exploring digital currency frameworks
+- **Voice-based payments**: For accessibility in rural areas
+
+## Conclusion
+
+Digital payments have made online shopping in Nepal faster, safer, and more accessible. As the ecosystem matures, expect even smoother experiences for buyers and sellers alike.
+    `,
+    category: "Industry",
+    author: "Marketplace Team",
+    date: "2026-03-22",
+    readTime: "7 min read",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop"
+  },
+  {
+    id: "20",
+    title: "Trekking Gear Checklist: What to Buy Before Your Next Nepal Adventure",
+    slug: "trekking-gear-checklist-nepal",
+    excerpt: "Planning a trek in Nepal? Here's a comprehensive gear checklist with tips on what to buy locally and what's worth investing in.",
+    content: `
+Nepal is the world's premier trekking destination. Whether you're attempting Everest Base Camp or exploring Langtang, proper gear is essential for safety and comfort.
+
+## Footwear — The Most Important Investment
+
+### Trekking Boots
+- Ankle support is non-negotiable for uneven terrain
+- Waterproof (Gore-Tex or equivalent) for river crossings and rain
+- Break them in before the trek — never wear new boots on day one
+- Budget: NPR 8,000–25,000 depending on quality
+
+### Socks
+- Merino wool or synthetic moisture-wicking socks
+- Bring at least 3 pairs
+- Liner socks underneath prevent blisters
+
+### Camp Shoes
+- Lightweight sandals or flip-flops for teahouses
+- Your feet need rest after a long day in boots
+
+## Clothing — Layer System
+
+### Base Layer
+- Moisture-wicking thermal tops and bottoms
+- Avoid cotton — it retains moisture and causes chills
+- Merino wool is ideal but synthetic works well on a budget
+
+### Mid Layer
+- Fleece jacket for insulation
+- Down jacket for high-altitude treks (above 3,500m)
+- Lightweight but warm options save pack weight
+
+### Outer Layer
+- Waterproof, breathable rain jacket (essential)
+- Rain pants for monsoon-season treks
+- Windproof layer for exposed ridgelines
+
+### Other Clothing
+- Quick-dry trekking pants (convertible zip-off style is versatile)
+- Sun hat with wide brim
+- Warm beanie for cold mornings and altitude
+- Buff/neck gaiter (multi-use: sun protection, warmth, dust filter)
+- Gloves (lightweight for moderate treks, insulated for high altitude)
+
+## Backpack & Carrying
+
+- **Day pack (30-40L)**: If using porters for main luggage
+- **Full pack (50-65L)**: If carrying everything yourself
+- Rain cover for the pack
+- Dry bags for organizing and waterproofing contents
+- Compression sacks for clothing
+
+## Navigation & Safety
+
+- Trekking poles (reduce knee strain by 25%)
+- Headlamp with extra batteries
+- Basic first-aid kit
+- Water purification (tablets or SteriPen)
+- Emergency whistle
+- Sun protection: sunscreen (SPF 50+), sunglasses (UV400)
+
+## Sleep & Comfort
+
+- Sleeping bag (rated for expected temperatures)
+- Sleeping bag liner (adds warmth and hygiene in teahouses)
+- Inflatable pillow (small luxury, big difference)
+- Earplugs (teahouse walls are thin)
+
+## Electronics
+
+- Power bank (20,000mAh minimum)
+- Camera with extra batteries (cold drains batteries fast)
+- Universal charger
+- Offline maps downloaded before departure
+
+## What to Buy Locally vs. Online
+
+### Buy on Marketplace Nepal (Before the Trek)
+- Quality boots (need time to break in)
+- Base layers and thermals
+- Power banks and electronics
+- Sunscreen and personal items
+- Water purification supplies
+
+### Buy in Thamel/Locally
+- Last-minute items and forgotten essentials
+- Trekking poles (affordable locally)
+- Buffs and accessories
+- Snacks and trail food
+
+## Pro Tips
+
+1. Make a checklist and pack two days before departure
+2. Weigh your pack — aim for under 10kg for day packs
+3. Dress in layers rather than one heavy garment
+4. Test all gear before the trek (especially electronics and boots)
+5. Invest in quality footwear and rain gear — don't compromise
+
+Adventure awaits! Get trek-ready with gear from Marketplace Nepal's outdoor collection.
+    `,
+    category: "Lifestyle",
+    author: "Marketplace Team",
+    date: "2026-03-25",
+    readTime: "9 min read",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&h=400&fit=crop"
+  },
+  {
+    id: "21",
+    title: "How to Write Product Reviews That Actually Help Other Buyers",
+    slug: "write-helpful-product-reviews",
+    excerpt: "Your reviews matter! Learn how to write product reviews that are genuinely useful for other shoppers on Marketplace Nepal.",
+    content: `
+Product reviews are the backbone of online shopping trust. A well-written review helps other buyers make informed decisions and helps sellers improve their products. Here's how to write reviews that truly matter.
+
+## Why Your Review Matters
+
+- 92% of online shoppers read reviews before purchasing
+- Detailed reviews reduce return rates for everyone
+- Honest feedback helps sellers improve quality
+- You earn loyalty points for every review on Marketplace Nepal
+
+## Structure of a Great Review
+
+### 1. Start with Context
+Tell readers why you bought the product:
+- What problem were you trying to solve?
+- What were your expectations?
+- How long have you used it?
+
+Example: "I bought this backpack for my daily commute from Lalitpur to Kathmandu. I've been using it for 3 months now."
+
+### 2. Describe the Product Honestly
+- Does it match the listing photos and description?
+- How is the build quality?
+- Are the materials as described?
+- Does it feel premium, average, or cheap?
+
+### 3. Share Your Experience
+- How does it perform in real-world use?
+- Any unexpected pros or cons?
+- How does it compare to alternatives you've tried?
+- Would you buy it again?
+
+### 4. Mention Specifics
+Details that help other buyers:
+- Sizing accuracy (for clothing: "I'm 5'8" and Medium fits perfectly")
+- Battery life claims vs. reality (for electronics)
+- Durability after extended use
+- Delivery packaging quality
+
+### 5. Rate Fairly
+- 5 stars: Exceptional, exceeded expectations
+- 4 stars: Good product, minor issues
+- 3 stars: Average, meets basic expectations
+- 2 stars: Below expectations, significant issues
+- 1 star: Unacceptable quality or completely misrepresented
+
+## What NOT to Do
+
+- Don't write one-word reviews ("Good" or "Bad" helps nobody)
+- Don't review the delivery service instead of the product
+- Don't leave a review before actually using the product
+- Don't include personal information or contact details
+- Don't be abusive — constructive criticism is always more helpful
+- Don't review a product you didn't buy
+
+## Photo Reviews
+
+A picture is worth a thousand words in reviews:
+- Show the product in actual use (not just the box)
+- Capture any defects or quality issues
+- Include a size reference if relevant
+- Good lighting makes your photos more useful
+
+## Review Etiquette
+
+- Update your review if the product's quality changes over time
+- Acknowledge if the seller resolved an issue
+- Be specific about what went wrong — vague complaints aren't actionable
+- Consider whether an issue is the product's fault or a shipping incident
+
+## The Impact of Good Reviews
+
+Your thoughtful review:
+- Helps the next buyer save money and time
+- Rewards good sellers with visibility
+- Holds poor sellers accountable
+- Builds a trusted community on Marketplace Nepal
+
+Take a few minutes to share your experience. The community will thank you!
+    `,
+    category: "Platform Guide",
+    author: "Marketplace Team",
+    date: "2026-03-28",
+    readTime: "6 min read",
+    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=400&fit=crop"
+  },
+  {
+    id: "22",
+    title: "Kitchen Gadgets Worth Buying: A Nepali Home Cook's Guide",
+    slug: "kitchen-gadgets-nepali-home-cook",
+    excerpt: "From pressure cookers to air fryers — discover which kitchen gadgets are truly worth the investment for Nepali cooking.",
+    content: `
+Nepali kitchens are evolving. Modern gadgets can save time and effort while making cooking more enjoyable. But which ones are actually worth your money? Let's break it down.
+
+## Must-Have Essentials
+
+### Pressure Cooker
+The undisputed king of Nepali kitchens:
+- Cooks dal, rice, and meat in minutes
+- Saves gas/electricity significantly
+- Look for ISI-marked quality from trusted brands
+- 3L for small families, 5L for larger ones
+- Both stovetop and electric options available
+
+### Mixer Grinder
+Essential for Nepali spice preparation:
+- Grinding masalas, making chutneys, and blending
+- Look for 750W+ motors for heavy-duty grinding
+- Multiple jar sizes (wet, dry, and chutney)
+- Stainless steel jars last longer than plastic
+
+### Electric Kettle
+For tea-loving Nepal, this is indispensable:
+- Boils water in under 3 minutes
+- Safer than stovetop heating
+- Auto shut-off prevents accidents
+- 1.5L capacity suits most households
+
+## Worth the Investment
+
+### Rice Cooker
+- Perfect rice every time (no more burnt-bottom bhat)
+- Set it and forget it — frees up stove space
+- Many models also steam vegetables and cook porridge
+- Digital models offer precision for different rice varieties
+
+### Air Fryer
+The trending kitchen gadget:
+- Healthier versions of fried snacks (samosa, pakora with less oil)
+- Great for reheating without sogginess
+- Easy to clean compared to traditional frying
+- 3-4L capacity works for most families
+
+### Induction Cooktop
+With gas prices rising:
+- Energy-efficient and fast heating
+- Safer (no open flame)
+- Easy to clean flat surface
+- Requires induction-compatible cookware
+
+## Nice to Have
+
+### Hand Blender (Immersion Blender)
+- Perfect for soups, smoothies, and baby food
+- Takes up minimal storage space
+- Easier to clean than a full blender
+
+### Electric Chopper
+- Quick vegetable chopping for daily cooking
+- Great for onions (no more tears!)
+- Some models double as mini food processors
+
+### Sandwich Maker / Grill
+- Quick breakfast and snack solution
+- Kids love grilled sandwiches
+- Compact and affordable
+
+## What to Skip
+
+Not every gadget is worth buying for Nepali cooking:
+- **Bread makers**: Unless you bake regularly, not practical
+- **Juicers**: Whole fruits are healthier; blenders can do the job
+- **Specialty single-use gadgets**: Egg boilers, banana slicers — your existing tools work fine
+
+## Buying Tips
+
+1. **Check wattage**: Nepal's electrical infrastructure varies — high-wattage appliances may trip breakers in older homes
+2. **Warranty**: Always buy from sellers offering local warranty
+3. **Voltage compatibility**: Ensure gadgets are rated for 220V
+4. **Storage space**: Nepali kitchens are often compact — measure before buying
+5. **Read reviews**: Other Nepali home cooks share the most relevant feedback
+
+## Energy Efficiency Matters
+
+With electricity costs being a real concern:
+- Induction cooktops are most efficient
+- Pressure cookers reduce cooking time by 70%
+- Electric kettles use less energy than stovetop boiling
+- Air fryers consume less energy than conventional ovens
+
+Browse Marketplace Nepal's kitchen category for verified products with genuine warranties!
+    `,
+    category: "Buying Guide",
+    author: "Marketplace Team",
+    date: "2026-03-30",
+    readTime: "7 min read",
+    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=400&fit=crop"
   }
 ];

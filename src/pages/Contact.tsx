@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, Clock, Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Contact Us — Marketplace Nepal | Customer Support & Help</title>
+        <meta name="description" content="Get in touch with Marketplace Nepal's customer support team. Call, WhatsApp, or email us for order inquiries, delivery updates, product questions, and more. Available Sunday to Friday." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/contact" />
+      </Helmet>
       <Header />
       
       <main className="container mx-auto px-4 py-8">

@@ -8,6 +8,7 @@ import { ProductRecommendations } from "@/components/ProductRecommendations";
 import { ChatAssistant } from "@/components/ChatAssistant";
 import { AdBanner } from "@/components/AdBanner";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
+import { HomepageContent } from "@/components/HomepageContent";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -73,6 +74,7 @@ const Index = () => {
         <AdBanner position="homepage" />
         <ProductGrid />
         <WhyChooseUs />
+        <HomepageContent />
       </main>
       <CartSidebar />
       <ChatAssistant />

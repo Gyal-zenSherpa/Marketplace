@@ -74,6 +74,7 @@ const Index = () => {
         <AdBanner position="homepage" />
         <ProductGrid />
         <WhyChooseUs />
+        <HomepageContent />
       </main>
       <CartSidebar />
       <ChatAssistant />

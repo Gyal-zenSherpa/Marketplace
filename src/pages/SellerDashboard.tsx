@@ -356,15 +356,11 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        <Tabs defaultValue={searchParams.get("tab") || "products"} className="space-y-6">
+        <Tabs defaultValue="products" className="space-y-6">
           <TabsList>
             <TabsTrigger value="products" className="flex items-center gap-1.5">
               <Package className="h-4 w-4" />
               Products
-            </TabsTrigger>
-            <TabsTrigger value="commission" className="flex items-center gap-1.5">
-              <DollarSign className="h-4 w-4" />
-              Commission
             </TabsTrigger>
           </TabsList>
 

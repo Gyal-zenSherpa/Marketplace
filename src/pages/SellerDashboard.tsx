@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X, DollarSign } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatNepaliPrice } from "@/lib/formatNepali";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SellerCommissionView } from "@/components/seller/SellerCommissionView";
+
 
 const categories = ["Electronics", "Fashion", "Home", "Food", "Sports", "women", "men", "kids"];
 
@@ -44,7 +44,7 @@ const initialForm: ProductForm = {
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  
   const { user, profile, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -351,20 +351,16 @@ export default function SellerDashboard() {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Seller Dashboard</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
-              Manage your product listings & commissions
+              Manage your product listings
             </p>
           </div>
         </div>
 
-        <Tabs defaultValue={searchParams.get("tab") || "products"} className="space-y-6">
+        <Tabs defaultValue="products" className="space-y-6">
           <TabsList>
             <TabsTrigger value="products" className="flex items-center gap-1.5">
               <Package className="h-4 w-4" />
               Products
-            </TabsTrigger>
-            <TabsTrigger value="commission" className="flex items-center gap-1.5">
-              <DollarSign className="h-4 w-4" />
-              Commission
             </TabsTrigger>
           </TabsList>
 
@@ -637,9 +633,6 @@ export default function SellerDashboard() {
         )}
           </TabsContent>
 
-          <TabsContent value="commission">
-            <SellerCommissionView />
-          </TabsContent>
         </Tabs>
       </main>
       <Footer />

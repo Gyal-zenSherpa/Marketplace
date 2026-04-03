@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Shield, Users, Activity, ArrowLeft, AlertTriangle, CheckCircle,
-  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare, Percent,
+  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -16,7 +16,7 @@ import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 import { AdManager } from "@/components/admin/AdManager";
 import { AdSenseManager } from "@/components/admin/AdSenseManager";
 import { CustomerReports } from "@/components/admin/CustomerReports";
-import { CommissionManager } from "@/components/admin/CommissionManager";
+
 import { AdminApplicationsTab } from "@/components/admin/AdminApplicationsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
@@ -187,9 +187,6 @@ export default function Admin() {
             <TabsTrigger value="reports" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Reports</span>
             </TabsTrigger>
-            <TabsTrigger value="commission" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Commission</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics">
@@ -250,9 +247,6 @@ export default function Admin() {
             <CustomerReports />
           </TabsContent>
 
-          <TabsContent value="commission">
-            <CommissionManager />
-          </TabsContent>
         </Tabs>
       </div>
     </div>

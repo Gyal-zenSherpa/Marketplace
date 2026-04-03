@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X, DollarSign } from "lucide-react";
+import { Plus, Edit2, Trash2, Package, ArrowLeft, Sparkles, Loader2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

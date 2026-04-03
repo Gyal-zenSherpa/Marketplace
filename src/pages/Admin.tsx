@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Shield, Users, Activity, ArrowLeft, AlertTriangle, CheckCircle,
-  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare, Percent,
+  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";

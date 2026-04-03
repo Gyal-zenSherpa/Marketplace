@@ -169,55 +169,6 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
         }
       }
 
-      // Commission on delivered
-      if (newStatus === "delivered" && targetOrder) {
-        try {
-          const { data: orderItems } = await supabase
-            .from("order_items")
-            .select("id, product_name, product_price, quantity, product_id")
-            .eq("order_id", orderId);
-
-          if (orderItems) {
-            const { data: graceConfig } = await supabase.from("commission_config").select("value").eq("key", "grace_period_days").single();
-            const graceDays = parseInt(graceConfig?.value || "30");
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + graceDays);
-
-            for (const item of orderItems) {
-              let sellerId: string | null = null;
-              if (item.product_id) {
-                const { data: product } = await supabase.from("products").select("seller_id").eq("id", item.product_id).single();
-                sellerId = product?.seller_id || null;
-              }
-              if (!sellerId) continue;
-
-              const { data: rateData } = await supabase.rpc("get_seller_commission_rate", { p_seller_id: sellerId });
-              const commissionRate = rateData ?? 10;
-              const salePrice = item.product_price * item.quantity;
-              const taxAmount = salePrice * 0.1;
-              const postTaxAmount = salePrice - taxAmount;
-              const commissionAmount = postTaxAmount * (commissionRate / 100);
-              const netToSeller = postTaxAmount - commissionAmount;
-
-              const { data: existing } = await supabase.from("commission_transactions").select("id").eq("order_id", orderId).eq("order_item_id", item.id).maybeSingle();
-              if (!existing) {
-                await supabase.from("commission_transactions").insert({
-                  order_id: orderId, order_item_id: item.id, seller_id: sellerId,
-                  product_name: item.product_name, sale_price: salePrice, tax_amount: taxAmount,
-                  post_tax_amount: postTaxAmount, commission_rate: commissionRate,
-                  commission_amount: commissionAmount, net_to_seller: netToSeller,
-                  payment_status: "pending", payment_due_date: dueDate.toISOString(),
-                });
-                await supabase.from("user_notifications").insert({
-                  user_id: sellerId, title: "Commission Recorded 📊",
-                  message: `Commission of Rs. ${commissionAmount.toFixed(0)} (${commissionRate}%) recorded for "${item.product_name}". Due by ${dueDate.toLocaleDateString()}.`,
-                  type: "commission", link: "/seller-dashboard?tab=commission",
-                });
-              }
-            }
-          }
-        } catch (commErr) { console.error("Failed to calculate commission:", commErr); }
-      }
 
       toast({ title: "Order updated", description: `Order status changed to ${newStatus}.` });
     } catch (err) {

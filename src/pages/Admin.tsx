@@ -16,7 +16,7 @@ import { OrderAnalytics } from "@/components/admin/OrderAnalytics";
 import { AdManager } from "@/components/admin/AdManager";
 import { AdSenseManager } from "@/components/admin/AdSenseManager";
 import { CustomerReports } from "@/components/admin/CustomerReports";
-import { CommissionManager } from "@/components/admin/CommissionManager";
+
 import { AdminApplicationsTab } from "@/components/admin/AdminApplicationsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";

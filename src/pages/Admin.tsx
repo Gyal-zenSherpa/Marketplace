@@ -187,9 +187,6 @@ export default function Admin() {
             <TabsTrigger value="reports" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Reports</span>
             </TabsTrigger>
-            <TabsTrigger value="commission" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Commission</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics">

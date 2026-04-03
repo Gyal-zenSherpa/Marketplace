@@ -633,9 +633,6 @@ export default function SellerDashboard() {
         )}
           </TabsContent>
 
-          <TabsContent value="commission">
-            <SellerCommissionView />
-          </TabsContent>
         </Tabs>
       </main>
       <Footer />

@@ -247,9 +247,6 @@ export default function Admin() {
             <CustomerReports />
           </TabsContent>
 
-          <TabsContent value="commission">
-            <CommissionManager />
-          </TabsContent>
         </Tabs>
       </div>
     </div>

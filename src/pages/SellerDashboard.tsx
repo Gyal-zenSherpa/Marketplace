@@ -44,7 +44,7 @@ const initialForm: ProductForm = {
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  
   const { user, profile, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

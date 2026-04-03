@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatNepaliPrice } from "@/lib/formatNepali";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SellerCommissionView } from "@/components/seller/SellerCommissionView";
+
 
 const categories = ["Electronics", "Fashion", "Home", "Food", "Sports", "women", "men", "kids"];
 

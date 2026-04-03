@@ -157,35 +157,35 @@ export default function Admin() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap w-full gap-1 h-auto max-w-5xl overflow-x-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Analytics</span>
+              <BarChart3 className="h-4 w-4" /> Analytics
             </TabsTrigger>
             <TabsTrigger value="applications" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Applications</span>
+              <Store className="h-4 w-4" /> Applications
               {statsData.pendingApps > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">{statsData.pendingApps}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Orders</span>
+              <Package className="h-4 w-4" /> Orders
               <Badge variant="secondary" className="ml-1 text-xs">{statsData.ordersCount}</Badge>
             </TabsTrigger>
             <TabsTrigger value="payments" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Payments</span>
+              <CreditCard className="h-4 w-4" /> Payments
             </TabsTrigger>
             <TabsTrigger value="ads" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Ads</span>
+              <Megaphone className="h-4 w-4" /> Ads
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Users</span>
+              <Users className="h-4 w-4" /> Users
             </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Audit</span>
+              <Activity className="h-4 w-4" /> Audit
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Security</span>
+              <Key className="h-4 w-4" /> Security
             </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="hidden xs:inline">Reports</span>
+              <MessageSquare className="h-4 w-4" /> Reports
             </TabsTrigger>
           </TabsList>
 

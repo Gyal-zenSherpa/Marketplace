@@ -106,6 +106,7 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; labe
 export default function Orders() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

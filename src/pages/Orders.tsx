@@ -158,6 +158,17 @@ export default function Orders() {
         }
       }
       setLoading(false);
+
+      // Auto-open specific order if linked from notification
+      const orderId = searchParams.get("id");
+      if (orderId && data) {
+        const target = (data as Order[]).find((o) => o.id === orderId);
+        if (target) {
+          setSelectedOrder(target);
+          setDetailOpen(true);
+          setSearchParams({}, { replace: true });
+        }
+      }
     };
 
     fetchOrders();

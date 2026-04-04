@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye, MapPin, Phone, User, CreditCard, Banknote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,6 +106,7 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; labe
 export default function Orders() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -157,6 +158,17 @@ export default function Orders() {
         }
       }
       setLoading(false);
+
+      // Auto-open specific order if linked from notification
+      const orderId = searchParams.get("id");
+      if (orderId && data) {
+        const target = (data as Order[]).find((o) => o.id === orderId);
+        if (target) {
+          setSelectedOrder(target);
+          setDetailOpen(true);
+          setSearchParams({}, { replace: true });
+        }
+      }
     };
 
     fetchOrders();

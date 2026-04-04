@@ -164,7 +164,7 @@ export function AdminOrdersTab({ statusFilter, onClearFilter }: Props) {
         const notif = notifMap[newStatus];
         if (notif) {
           await supabase.from("user_notifications").insert({
-            user_id: targetOrder.user_id, title: notif.title, message: notif.message, type: "order", link: "/orders",
+            user_id: targetOrder.user_id, title: notif.title, message: notif.message, type: "order", link: `/orders?id=${orderId}`,
           });
         }
       }

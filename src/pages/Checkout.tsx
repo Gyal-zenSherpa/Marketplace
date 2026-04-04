@@ -342,7 +342,7 @@ export default function Checkout() {
         title: "Order Placed Successfully! 🎉",
         message: `Your order #${order.id.slice(0, 8).toUpperCase()} has been placed. We'll notify you when it ships.`,
         type: "order",
-        link: "/orders",
+        link: `/orders?id=${order.id}`,
       });
 
       // Send order confirmation email

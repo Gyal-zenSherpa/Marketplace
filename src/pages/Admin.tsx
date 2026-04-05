@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Shield, Users, Activity, ArrowLeft, AlertTriangle, CheckCircle,
-  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare,
+  Key, Store, Package, CreditCard, BarChart3, Megaphone, MessageSquare, ShoppingBag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
@@ -21,6 +21,7 @@ import { AdminApplicationsTab } from "@/components/admin/AdminApplicationsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminAuditTab } from "@/components/admin/AdminAuditTab";
+import { AdminProductsTab } from "@/components/admin/AdminProductsTab";
 
 export default function Admin() {
   const { user, loading } = useAuth();
@@ -172,6 +173,9 @@ export default function Admin() {
             <TabsTrigger value="payments" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <CreditCard className="h-4 w-4" /> Payments
             </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <ShoppingBag className="h-4 w-4" /> Products
+            </TabsTrigger>
             <TabsTrigger value="ads" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <Megaphone className="h-4 w-4" /> Ads
             </TabsTrigger>
@@ -203,6 +207,10 @@ export default function Admin() {
 
           <TabsContent value="payments">
             <PaymentQRManager />
+          </TabsContent>
+
+          <TabsContent value="products">
+            <AdminProductsTab />
           </TabsContent>
 
           <TabsContent value="ads">

@@ -209,6 +209,10 @@ export default function Admin() {
             <PaymentQRManager />
           </TabsContent>
 
+          <TabsContent value="products">
+            <AdminProductsTab />
+          </TabsContent>
+
           <TabsContent value="ads">
             <Card>
               <CardContent className="pt-6"><AdManager /></CardContent>

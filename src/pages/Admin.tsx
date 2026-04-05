@@ -21,6 +21,7 @@ import { AdminApplicationsTab } from "@/components/admin/AdminApplicationsTab";
 import { AdminOrdersTab } from "@/components/admin/AdminOrdersTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminAuditTab } from "@/components/admin/AdminAuditTab";
+import { AdminProductsTab } from "@/components/admin/AdminProductsTab";
 
 export default function Admin() {
   const { user, loading } = useAuth();

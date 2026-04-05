@@ -173,6 +173,9 @@ export default function Admin() {
             <TabsTrigger value="payments" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <CreditCard className="h-4 w-4" /> Payments
             </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <ShoppingBag className="h-4 w-4" /> Products
+            </TabsTrigger>
             <TabsTrigger value="ads" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <Megaphone className="h-4 w-4" /> Ads
             </TabsTrigger>

@@ -242,15 +242,10 @@ serve(async (req) => {
           });
         }
 
-        // Verify the authenticated user's email matches the reset request
-        const userClient = createClient(
-          SUPABASE_URL,
-          Deno.env.get('SUPABASE_ANON_KEY')!,
-          { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-        );
-        const { data: userData } = await userClient.auth.getUser();
+        // Verify the authenticated user's email matches the reset request using service-role client
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
         
-        if (!userData?.user?.email || userData.user.email.toLowerCase() !== email.toLowerCase().trim()) {
+        if (userError || !userData?.user?.email || userData.user.email.toLowerCase() !== email.toLowerCase().trim()) {
           return new Response(JSON.stringify({ error: 'Forbidden: email mismatch' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },

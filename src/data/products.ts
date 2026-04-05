@@ -299,4 +299,4 @@ export const products: Product[] = [
   },
 ];
 
-export const categories = ["All", "Electronics", "Fashion", "Home", "Food", "Sports"];
+export const categories = ["All", "Electronics", "Fashion", "Home", "Food", "Sports", "Gadgets", "Clothes", "Kitchen & Home", "Kids", "Men", "Women"];

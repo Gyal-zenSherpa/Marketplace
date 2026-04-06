@@ -135,7 +135,7 @@ export default function Auth() {
       const validated = magicLinkSchema.parse({ email });
       
       const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {

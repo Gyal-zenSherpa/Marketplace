@@ -35,7 +35,7 @@ const ReportIssue = lazy(() => import("./pages/ReportIssue"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
-
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const queryClient = new QueryClient();
 
 const PageLoader = () => (

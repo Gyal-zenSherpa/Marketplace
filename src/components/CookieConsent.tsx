@@ -8,7 +8,16 @@ export function CookieConsent() {
 
   useEffect(() => {
     const consent = localStorage.getItem("cookie-consent");
-    if (!consent) {
+    if (consent === "accepted") {
+      // Load AdSense if previously accepted
+      if (!document.querySelector('script[src*="adsbygoogle"]')) {
+        const script = document.createElement("script");
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7771019528726079";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        document.head.appendChild(script);
+      }
+    } else if (!consent) {
       const timer = setTimeout(() => setVisible(true), 1000);
       return () => clearTimeout(timer);
     }
@@ -17,6 +26,18 @@ export function CookieConsent() {
   const handleAccept = () => {
     localStorage.setItem("cookie-consent", "accepted");
     setVisible(false);
+    // Load AdSense after consent
+    loadAdSense();
+  };
+
+  const loadAdSense = () => {
+    if (!document.querySelector('script[src*="adsbygoogle"]')) {
+      const script = document.createElement("script");
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7771019528726079";
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    }
   };
 
   const handleReject = () => {

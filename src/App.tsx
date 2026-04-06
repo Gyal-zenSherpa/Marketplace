@@ -35,7 +35,7 @@ const ReportIssue = lazy(() => import("./pages/ReportIssue"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
-
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
@@ -81,6 +81,7 @@ const App = () => {
                       <Route path="/disclaimer" element={<Disclaimer />} />
                       <Route path="/blog" element={<Blog />} />
                       <Route path="/blog/:slug" element={<BlogPost />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>

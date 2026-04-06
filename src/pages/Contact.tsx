@@ -74,7 +74,7 @@ const Contact = () => {
     const newErrors = validateForm();
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('Form submitted:', formData);
+      console.log('Contact form submitted successfully');
       setSubmitted(true);
       
       setTimeout(() => {

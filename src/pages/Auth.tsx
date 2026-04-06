@@ -317,7 +317,7 @@ export default function Auth() {
             await supabase.functions.invoke('send-welcome-email', {
               body: {},
             });
-            console.log("Welcome email sent to:", validated.email);
+            console.log("Welcome email sent successfully");
           } catch (emailErr) {
             console.error("Failed to send welcome email:", emailErr);
             // Don't fail signup if email fails

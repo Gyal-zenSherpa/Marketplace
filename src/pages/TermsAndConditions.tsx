@@ -376,6 +376,11 @@ export default function TermsAndConditions() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Terms & Conditions — Marketplace Nepal</title>
+        <meta name="description" content="Read the Terms and Conditions for using Marketplace Nepal. Understand your rights, responsibilities, and our platform policies for buyers and sellers." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/terms" />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <button

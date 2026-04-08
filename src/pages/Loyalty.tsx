@@ -127,6 +127,10 @@ export default function Loyalty() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Loyalty Rewards — Marketplace Nepal</title>
+        <meta name="description" content="Earn points on every purchase, unlock exclusive rewards, and enjoy tier-based benefits with Marketplace Nepal's loyalty program." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <button

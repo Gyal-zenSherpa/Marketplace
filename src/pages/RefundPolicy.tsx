@@ -289,6 +289,11 @@ export default function RefundPolicy() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Refund Policy — Marketplace Nepal</title>
+        <meta name="description" content="Understand Marketplace Nepal's refund and return policy. Learn about eligibility, timelines, and the process for product returns and exchanges." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/refund-policy" />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-6 md:py-8">
         <button

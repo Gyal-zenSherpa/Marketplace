@@ -395,6 +395,10 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Checkout — Marketplace Nepal</title>
+        <meta name="description" content="Complete your purchase securely on Marketplace Nepal. Multiple payment options including eSewa, Khalti, and cash on delivery." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-4 sm:py-8">
         <button

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package, Clock, CheckCircle, Truck, XCircle, Eye, MapPin, Phone, User, CreditCard, Banknote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,6 +217,10 @@ export default function Orders() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>My Orders — Marketplace Nepal</title>
+        <meta name="description" content="Track your orders, view order history, and manage returns on Marketplace Nepal." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <button

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { User, Camera, Save, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,10 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>My Profile — Marketplace Nepal</title>
+        <meta name="description" content="Manage your Marketplace Nepal profile, update personal information, and customize your account settings." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <button

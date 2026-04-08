@@ -228,6 +228,35 @@ export default function PrivacyPolicy() {
             })}
           </div>
 
+          {/* Data Handling */}
+          <div className="bg-card border border-border rounded-xl p-5 md:p-7 mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-primary/10 p-2.5 rounded-lg">
+                <Database className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-lg md:text-xl font-semibold text-foreground">Data Handling</h2>
+            </div>
+            <div className="space-y-5">
+              <div>
+                <h3 className="font-medium text-foreground text-sm mb-2">How We Process Your Data</h3>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>All data is processed on secure servers located within our cloud infrastructure with encryption at rest and in transit</span></li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>Personal data is only accessed by authorized personnel on a need-to-know basis for order fulfillment and support</span></li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>We minimize data collection — we only gather information that is necessary to provide and improve our services</span></li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>Automated decision-making is limited to product recommendations based on anonymized browsing patterns</span></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground text-sm mb-2">Data Transfer & Storage</h3>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>Your data may be transferred to third-party services (payment processors, delivery partners) only as necessary to fulfill orders</span></li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>All third-party partners are contractually obligated to protect your data and use it solely for the intended purpose</span></li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground"><span className="text-primary mt-1 shrink-0">•</span><span>We perform regular data backups and maintain disaster recovery procedures to prevent data loss</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Children's Privacy */}
           <div className="bg-muted/50 rounded-xl p-5 md:p-7 mt-8">
             <h2 className="text-lg font-semibold text-foreground mb-3">Children's Privacy</h2>

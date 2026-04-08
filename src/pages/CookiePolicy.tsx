@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from "react-helmet-async";
 import { Cookie, Shield, Settings, Info, AlertTriangle, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,11 @@ const CookiePolicy = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Cookie Policy — Marketplace Nepal</title>
+        <meta name="description" content="Learn how Marketplace Nepal uses cookies and similar tracking technologies to enhance your browsing experience and personalize content." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/cookie-policy" />
+      </Helmet>
       <Header />
       
       <main className="flex-1 py-6 sm:py-8 lg:py-12">

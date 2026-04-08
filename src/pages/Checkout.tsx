@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, Truck, ShoppingBag, Banknote, QrCode, ImageIcon, Upload, X, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -394,6 +395,10 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Checkout — Marketplace Nepal</title>
+        <meta name="description" content="Complete your purchase securely on Marketplace Nepal. Multiple payment options including eSewa, Khalti, and cash on delivery." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-4 sm:py-8">
         <button

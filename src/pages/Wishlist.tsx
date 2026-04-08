@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Heart, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -99,6 +100,10 @@ export default function Wishlist() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>My Wishlist — Marketplace Nepal</title>
+        <meta name="description" content="View and manage your saved products on Marketplace Nepal. Keep track of items you love and buy them when you're ready." />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">

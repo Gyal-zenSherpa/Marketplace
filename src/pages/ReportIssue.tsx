@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from "react-helmet-async";
 import { AlertTriangle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -74,6 +75,11 @@ const ReportIssue = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Report an Issue — Marketplace Nepal</title>
+        <meta name="description" content="Report a problem with your order, product, or account on Marketplace Nepal. Our support team will respond within 24–48 hours." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/report-issue" />
+      </Helmet>
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-2xl">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -264,6 +265,11 @@ const SellerApplication = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Become a Seller — Marketplace Nepal</title>
+        <meta name="description" content="Apply to sell your products on Marketplace Nepal. Reach thousands of customers across Nepal with our trusted seller platform." />
+        <link rel="canonical" href="https://marketplace-gzn.lovable.app/become-seller" />
+      </Helmet>
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <Button

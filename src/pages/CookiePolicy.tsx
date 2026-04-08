@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from "react-helmet-async";
 import { Cookie, Shield, Settings, Info, AlertTriangle, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

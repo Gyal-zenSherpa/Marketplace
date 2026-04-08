@@ -131,6 +131,10 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{product ? `${product.name} — Marketplace Nepal` : 'Product — Marketplace Nepal'}</title>
+        <meta name="description" content={product?.description || `Shop quality products at Marketplace Nepal with secure payments and fast delivery across Nepal.`} />
+      </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-8">
         <button

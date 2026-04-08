@@ -11,6 +11,10 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">
+      <Helmet>
+        <title>Page Not Found — Marketplace Nepal</title>
+        <meta name="description" content="The page you're looking for doesn't exist. Browse our marketplace for amazing deals on electronics, fashion, and more." />
+      </Helmet>
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">404</h1>
         <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>

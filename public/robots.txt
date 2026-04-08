@@ -14,3 +14,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://marketplace-gzn.lovable.app/functions/v1/sitemap
+
+# IndexNow key for Bing/Yandex instant indexing
+# Key file: https://marketplace-gzn.lovable.app/b5cf777a7a4243d9a91b5e891f9fc59e.txt

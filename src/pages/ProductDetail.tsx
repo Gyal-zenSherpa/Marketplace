@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Star, ShoppingBag, Heart, ArrowLeft, Truck, Shield, RotateCcw, Zap, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";

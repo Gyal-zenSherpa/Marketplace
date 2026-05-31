@@ -63,11 +63,12 @@ export function ProductFilters({
 
   return (
     <div className="mb-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4">
         <Button
           variant="outline"
+          size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="gap-2"
+          className="gap-2 flex-shrink-0"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filters
@@ -78,12 +79,12 @@ export function ProductFilters({
           )}
         </Button>
 
-        <div className="flex items-center gap-3">
-          <Label htmlFor="sort" className="text-sm text-muted-foreground whitespace-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end min-w-0">
+          <Label htmlFor="sort" className="text-sm text-muted-foreground whitespace-nowrap hidden sm:block">
             Sort by:
           </Label>
           <Select value={filters.sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full max-w-[180px] sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

@@ -101,9 +101,9 @@ export function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-1.5 md:gap-3">
-          <ThemeToggle />
-          {user && <div className="hidden sm:block"><LoyaltyWidget /></div>}
+        <div className="flex items-center gap-1 md:gap-3">
+          <div className="hidden xs:block sm:block"><ThemeToggle /></div>
+          {user && <div className="hidden md:block"><LoyaltyWidget /></div>}
 
           {/* Notifications (replaces wishlist) */}
           {user && <NotificationBell />}

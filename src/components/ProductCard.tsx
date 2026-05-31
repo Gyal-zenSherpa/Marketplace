@@ -90,30 +90,30 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(
             </button>
           </div>
           
-          {/* Quick actions overlay - always visible on hover */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full p-2 md:p-3 transition-transform duration-300 group-hover:translate-y-0">
+          {/* Quick actions overlay - visible on touch, hover on desktop */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-0 md:translate-y-full p-2 md:p-3 transition-transform duration-300 md:group-hover:translate-y-0">
             <div className="flex gap-1.5 md:gap-2">
               <Button
                 variant="secondary"
                 size="sm"
-                className="flex-1 bg-yellow-400 text-yellow-900 font-semibold hover:bg-yellow-500 transition-colors duration-200 text-xs md:text-sm h-8 md:h-9"
+                className="flex-1 bg-yellow-400 text-yellow-900 font-semibold hover:bg-yellow-500 transition-colors duration-200 text-[11px] md:text-sm h-8 md:h-9 px-1.5 md:px-3"
                 onClick={(e) => {
                   e.stopPropagation();
                   addToCart(product);
                 }}
                 disabled={!product.inStock}
               >
-                <ShoppingBag className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                <ShoppingBag className="h-3.5 w-3.5 md:h-4 md:w-4 mr-0.5 md:mr-1" />
                 Add
               </Button>
               <Button
                 size="sm"
-                className="flex-1 gradient-hero text-primary-foreground font-semibold text-xs md:text-sm h-8 md:h-9"
+                className="flex-1 gradient-hero text-primary-foreground font-semibold text-[11px] md:text-sm h-8 md:h-9 px-1.5 md:px-3"
                 onClick={handleBuyNow}
                 disabled={!product.inStock}
               >
-                <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
-                Buy Now
+                <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 mr-0.5 md:mr-1" />
+                Buy
               </Button>
             </div>
           </div>
